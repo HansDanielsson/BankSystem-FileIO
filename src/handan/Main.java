@@ -454,7 +454,7 @@ public class Main extends Application {
     }
 
     // Skapa en TextArea för visning
-    TextArea textArea = new TextArea(content.toString());
+    TextArea textArea = new TextArea(content);
     textArea.setEditable(false);
     textArea.setWrapText(true);
     textArea.setMaxWidth(600);
