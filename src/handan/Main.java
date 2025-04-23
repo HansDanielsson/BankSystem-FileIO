@@ -6,10 +6,12 @@ package handan;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 //Importsatser
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -129,7 +131,7 @@ public class Main extends Application {
   private static void bankAccountList(short index) {
     switch (index) {
     case 6, 7, 8, 9, 10:
-      List<String> result = bank.getAccountList(tfPNo[index].getText());
+      List<String> result = BankLogic.getAccountList(tfPNo[index].getText());
       tfKontoList.clear();
       if (result != null) {
         tfKontoList.addAll(result);
@@ -203,7 +205,7 @@ public class Main extends Application {
   private static void bankMenuFile(short index) {
     switch (index) {
     case 0: // Spara banken
-      setStatusError("Spara banken");
+      putFileBank();
       break;
     case 1: // Läs in banken
       setStatusError("Läs in banken");
@@ -274,7 +276,7 @@ public class Main extends Application {
    * Rutin som byte namn på en kund(pNr)
    */
   private static void changeBankCustomerName() {
-    if (bank.changeCustomerName(tfName[2].getText(), tfSurname[2].getText(), tfPNo[2].getText())) {
+    if (BankLogic.changeCustomerName(tfName[2].getText(), tfSurname[2].getText(), tfPNo[2].getText())) {
       setStatusOk(SAVED);
     } else {
       setStatusError(NOTSAVED);
@@ -288,7 +290,7 @@ public class Main extends Application {
     String strKonto = tfKontoNr[10].getSelectionModel().getSelectedItem();
     try {
       if (!strKonto.isBlank()) {
-        String str = bank.closeAccount(tfPNo[10].getText(), Integer.parseInt(strKonto));
+        String str = BankLogic.closeAccount(tfPNo[10].getText(), Integer.parseInt(strKonto));
         if (str != null) {
           List<String> result = new ArrayList<>();
           result.add(str);
@@ -305,7 +307,7 @@ public class Main extends Application {
    * Rutin som skapar ett kreditkonto för person(pNo)
    */
   private static void createBankCreditAccount() {
-    int accountId = bank.createCreditAccount(tfPNo[5].getText());
+    int accountId = BankLogic.createCreditAccount(tfPNo[5].getText());
     if (accountId > 0) {
       List<String> result = new ArrayList<>();
       result.add("Kontonummer: " + accountId);
@@ -319,7 +321,7 @@ public class Main extends Application {
    * Rutin som skapar en kund med f-namn, e-namn och pNr
    */
   private static void createBankCustomer() {
-    if (bank.createCustomer(tfName[0].getText(), tfSurname[0].getText(), tfPNo[0].getText())) {
+    if (BankLogic.createCustomer(tfName[0].getText(), tfSurname[0].getText(), tfPNo[0].getText())) {
       setStatusOk(SAVED);
     } else {
       setStatusError(NOTSAVED);
@@ -330,7 +332,7 @@ public class Main extends Application {
    * Rutin som skapar ett sparkonto för kund pNr
    */
   private static void createBankSavingAccount() {
-    int accountId = bank.createSavingsAccount(tfPNo[4].getText());
+    int accountId = BankLogic.createSavingsAccount(tfPNo[4].getText());
     if (accountId > 0) {
       List<String> result = new ArrayList<>();
       result.add("Kontonummer: " + accountId);
@@ -344,7 +346,7 @@ public class Main extends Application {
    * Rutin som tar bort en kund(pNo)
    */
   private static void deletBankCustomer() {
-    List<String> result = bank.deleteCustomer(tfPNo[3].getText());
+    List<String> result = BankLogic.deleteCustomer(tfPNo[3].getText());
     if (result != null) {
       putCenterText(result);
     }
@@ -357,7 +359,7 @@ public class Main extends Application {
     String strKonto = tfKontoNr[7].getSelectionModel().getSelectedItem();
     String strBelopp = tfBelopp[7].getText();
     try {
-      if (bank.deposit(tfPNo[7].getText(), Integer.parseInt(strKonto), Integer.parseInt(strBelopp))) {
+      if (BankLogic.deposit(tfPNo[7].getText(), Integer.parseInt(strKonto), Integer.parseInt(strBelopp))) {
         setStatusOk(SAVED);
       } else {
         setStatusError(NOTSAVED);
@@ -374,7 +376,7 @@ public class Main extends Application {
     String strKonto = tfKontoNr[6].getSelectionModel().getSelectedItem();
     try {
       if (!strKonto.isBlank()) {
-        String str = bank.getAccount(tfPNo[6].getText(), Integer.parseInt(strKonto));
+        String str = BankLogic.getAccount(tfPNo[6].getText(), Integer.parseInt(strKonto));
         if (str != null) {
           List<String> result = new ArrayList<>();
           result.add(str);
@@ -390,7 +392,7 @@ public class Main extends Application {
    * Rutin som hämtar alla kunder och visar det i fönster Center
    */
   private static void getBankAllCustomers() {
-    List<String> result = bank.getAllCustomers();
+    List<String> result = BankLogic.getAllCustomers();
     if (result != null) {
       putCenterText(result);
     }
@@ -400,7 +402,7 @@ public class Main extends Application {
    * Rutin som tar fram en kund med konton
    */
   private static void getBankCustomer() {
-    List<String> result = bank.getCustomer(tfPNo[1].getText());
+    List<String> result = BankLogic.getCustomer(tfPNo[1].getText());
     if (result != null) {
       putCenterText(result);
     }
@@ -413,7 +415,7 @@ public class Main extends Application {
     String strKonto = tfKontoNr[9].getSelectionModel().getSelectedItem();
     try {
       if (!strKonto.isBlank()) {
-        List<String> result = bank.getTransactions(tfPNo[9].getText(), Integer.parseInt(strKonto));
+        List<String> result = BankLogic.getTransactions(tfPNo[9].getText(), Integer.parseInt(strKonto));
         if (result != null) {
           if (saveToFile) {
             putFileTransactions(result);
@@ -484,6 +486,19 @@ public class Main extends Application {
     tfResultList.addAll(strResult);
   }
 
+  private static void putFileBank() {
+    String strDate = sdf.format(new Date());
+    String strFiles = "src/handan/files/bank-" + strDate + ".dat";
+    try (FileOutputStream fos = new FileOutputStream(strFiles, true);
+        ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+      oos.writeObject(bank);
+      setStatusOk("Sparad till fil: " + strFiles);
+    } catch (IOException e) {
+      setStatusError("Sökväg/Åtkomst nekad");
+      e.printStackTrace();
+    }
+  }
+
   /**
    * Hjälprutin som skriver transaktioner till filen, givet att result är inte
    * null.
@@ -539,7 +554,7 @@ public class Main extends Application {
     try {
       int accountId = Integer.parseInt(tfKontoNr[8].getSelectionModel().getSelectedItem());
       int amount = Integer.parseInt(tfBelopp[8].getText());
-      if (bank.withdraw(tfPNo[8].getText(), accountId, amount)) {
+      if (BankLogic.withdraw(tfPNo[8].getText(), accountId, amount)) {
         setStatusOk(SAVED);
       } else {
         setStatusError(NOTSAVED);
