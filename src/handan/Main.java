@@ -4,6 +4,9 @@
  */
 package handan;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 //Importsatser
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,12 +14,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 //Importsatser för JavaFX med olika API rutiner
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -24,12 +29,14 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 public class Main extends Application {
@@ -206,7 +213,7 @@ public class Main extends Application {
       borderPane.setLeft(vbox[5 + 4]);
       break;
     case 3: // Visa transaktioner
-      setStatusError("Läs in banken");
+      getFileTransactions();
       break;
     case 4: // Avsluta
       System.exit(0);
@@ -418,6 +425,48 @@ public class Main extends Application {
     } catch (Exception e) {
       setStatusError("Felaktigt kontonummer: " + strKonto);
     }
+  }
+
+  /**
+   * Rutin som öppnar en fil och läser in transaktioner till en dialog ruta med
+   * scroll
+   */
+  private static void getFileTransactions() {
+    FileChooser fileChooser = new FileChooser();
+    fileChooser.setTitle("Öppna transaktionsfil");
+    fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Textfiler", "*.txt"));
+
+    // Sätt startkatalogen
+    File initialDir = new File("src/handan/files");
+    fileChooser.setInitialDirectory(initialDir.exists() ? initialDir : new File(System.getProperty("user.home")));
+
+    File file = fileChooser.showOpenDialog(new Stage());
+    if (file == null) {
+      return;
+    }
+
+    String content;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      content = br.lines().collect(Collectors.joining(System.lineSeparator()));
+    } catch (IOException e) {
+      setStatusError("Fel vid läsning av fil: " + file.getAbsolutePath());
+      return;
+    }
+
+    // Skapa en TextArea för visning
+    TextArea textArea = new TextArea(content.toString());
+    textArea.setEditable(false);
+    textArea.setWrapText(true);
+    textArea.setMaxWidth(600);
+    textArea.setMaxHeight(400);
+
+    // Visa i alert-dialog
+    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+    alert.setTitle("Transaktioner");
+    alert.setHeaderText("Innehåll i filen: " + file.getName());
+    alert.getDialogPane().setContent(textArea);
+    alert.setResizable(true);
+    alert.showAndWait();
   }
 
   public static void main(String[] args) {
