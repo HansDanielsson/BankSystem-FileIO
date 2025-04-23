@@ -4,27 +4,35 @@
  */
 package handan;
 
+/**
+ * Importsatser
+ */
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-//Importsatser
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-//Importsatser för JavaFX med olika API rutiner
+/**
+ * Importsatser för JavaFX med olika API rutiner
+ */
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Menu;
@@ -50,9 +58,6 @@ public class Main extends Application {
 
   private static final SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd-HHmmss");
 
-  // bank-hanteraren
-  private static BankLogic bank = new BankLogic();
-
   // Skapar upp en BorderPane
   private static BorderPane borderPane = new BorderPane();
 
@@ -61,43 +66,43 @@ public class Main extends Application {
 
   private static final String[] strMenuFile = { "Spara banken", "Läs in banken", "Spara transaktioner",
       "Visa transaktioner", "Avsluta" };
+
   private static MenuItem[] menuItemFile = new MenuItem[strMenuFile.length];
   private static Menu menuCustomer = new Menu("Kund");
-
   private static final String[] strMenuCustomer = { "Spara", "Hämta", "Byt namn", "Ta bort", "Lista" };
+
   private static MenuItem[] menuItemCustomer = new MenuItem[strMenuCustomer.length];
   private static Menu menuAccount = new Menu("Konton");
-
   private static final String[] strMenuAccount = { "Spar", "Kredit", "Saldo", "Sätta in", "Ta ut", "Transaktioner",
       "Ta bort" };
+
   private static MenuItem[] menuItemAccount = new MenuItem[strMenuAccount.length];
   // Meny-hanterare, innehåller alla menyer
   private static MenuBar menuBar = new MenuBar(menuFile, menuCustomer, menuAccount);
-
   // Spara knappen till olika syften
   private static final String[] strButton = { "Spara", "Hämta", "Byt namn", "Ta bort", "Spar", "Kredit", "Saldo",
       "Sätt in", "Ta ut", "Transaktioner", "Ta bort", "Spara banken", "Läs in banken" };
 
   private static Label[] labelPNo = new Label[strButton.length];
 
+  private static TextField[] tfPNo = new TextField[strButton.length];
+
   // Deklaration av text/inmatning, som används på olika ställen
 
-  private static TextField[] tfPNo = new TextField[strButton.length];
   private static Label[] labelName = new Label[strButton.length];
-
   private static TextField[] tfName = new TextField[strButton.length];
-  private static Label[] labelSurname = new Label[strButton.length];
 
+  private static Label[] labelSurname = new Label[strButton.length];
   private static TextField[] tfSurname = new TextField[strButton.length];
+
   /**
    * Man behöver bara använda en tfKontoList som används för alla listor på alla
    * "sidor"
    */
   private static ObservableList<String> tfKontoList = FXCollections.observableArrayList();
-
   private static ObservableList<String> tfResultList = FXCollections.observableArrayList();
-  private static Label[] labelKontoNr = new Label[strButton.length];
 
+  private static Label[] labelKontoNr = new Label[strButton.length];
   // Ignorerar varningen, det blir rätt kod ändå.
   @SuppressWarnings("unchecked")
   private static ListView<String>[] tfKontoNr = new ListView[strButton.length];
@@ -105,42 +110,23 @@ public class Main extends Application {
   private static Label[] labelBelopp = new Label[strButton.length];
 
   private static TextField[] tfBelopp = new TextField[strButton.length];
-  private static Button[] saveButton = new Button[strButton.length];
 
+  private static Button[] saveButton = new Button[strButton.length];
   private static VBox[] vbox = new VBox[strButton.length];
 
   // Bilder att visa i högra delen
   private static final Image imageBag = new Image("file:src/handan/files/bag-96x96.png");
+
   private static final Image imagePiggy = new Image("file:src/handan/files/piggy-bank-96x96.png");
   private static final Image imageSafe = new Image("file:src/handan/files/safe-96x96.png");
   // Skapa 3 ImageView för att visa bilderna
   private static ImageView bagImageView = new ImageView(imageBag);
-
   private static ImageView piggyImageView = new ImageView(imagePiggy);
+
   private static ImageView safeImageView = new ImageView(imageSafe);
   private static VBox imageVBox = new VBox(20);
   private static ListView<String> centralResult = new ListView<>(tfResultList);
-
   private static Label statusText = new Label();
-
-  /**
-   * Rutin som fixar alla konton till ett pNr, Givet att pNr är ifyllt
-   *
-   * @param index - Menyvalet
-   */
-  private static void bankAccountList(short index) {
-    switch (index) {
-    case 6, 7, 8, 9, 10:
-      List<String> result = BankLogic.getAccountList(tfPNo[index].getText());
-      tfKontoList.clear();
-      if (result != null) {
-        tfKontoList.addAll(result);
-      }
-      break;
-    default:
-      break;
-    }
-  }
 
   /**
    * Hjälprutin som kollar att belopp är utan decimaler. Systemet är byggt på
@@ -175,257 +161,6 @@ public class Main extends Application {
     default:
       setStatusError("Konton, index = " + index);
       break;
-    }
-  }
-
-  /**
-   * Rutin som utför kommandon under Kund
-   *
-   * @param index - Menyvalet
-   */
-  private static void bankMenuCustomer(short index) {
-    switch (index) {
-    case 0, 1, 2, 3: // Kund kommando
-      borderPane.setLeft(vbox[index]);
-      break;
-    case 4: // Lista alla kunder
-      getBankAllCustomers();
-      break;
-    default:
-      setStatusError("Kund, index = " + index);
-      break;
-    }
-  }
-
-  /**
-   * Rutin som utför kommando under File
-   *
-   * @param index - Menyvalet
-   */
-  private static void bankMenuFile(short index) {
-    switch (index) {
-    case 0: // Spara banken
-      putFileBank();
-      break;
-    case 1: // Läs in banken
-      setStatusError("Läs in banken");
-      break;
-    case 2: // Spara transaktioner
-      saveToFile = true;
-      borderPane.setLeft(vbox[5 + 4]);
-      break;
-    case 3: // Visa transaktioner
-      getFileTransactions();
-      break;
-    case 4: // Avsluta
-      System.exit(0);
-      break;
-    default:
-      setStatusError("File, index = " + index);
-      break;
-    }
-  }
-
-  /**
-   * Rutin som anropas när användaren har tryckt på en Button-knapp
-   *
-   * @param index - Knappens syfte
-   */
-  private static void bankMenuSave(short index) {
-    switch (index) {
-    case 0: // Spara ny kund
-      createBankCustomer();
-      break;
-    case 1: // Hämta EN kund
-      getBankCustomer();
-      break;
-    case 2: // Byt namn på kund
-      changeBankCustomerName();
-      break;
-    case 3: // Ta bort kund
-      deletBankCustomer();
-      break;
-    case 4: // Skapa Sparkonto
-      createBankSavingAccount();
-      break;
-    case 5: // Skapa Kreditkonto
-      createBankCreditAccount();
-      break;
-    case 6: // Saldo
-      getBankAccount();
-      break;
-    case 7: // Sätta in
-      depositBankAccount();
-      break;
-    case 8: // Ta ut
-      withdrawBankAccount();
-      break;
-    case 9: // Transaktioner
-      getBankTransactions();
-      break;
-    case 10: // Ta bort konto
-      closeBankAccount();
-      break;
-    default:
-      setStatusError("Save button, index = " + index);
-      break;
-    }
-  }
-
-  /**
-   * Rutin som byte namn på en kund(pNr)
-   */
-  private static void changeBankCustomerName() {
-    if (BankLogic.changeCustomerName(tfName[2].getText(), tfSurname[2].getText(), tfPNo[2].getText())) {
-      setStatusOk(SAVED);
-    } else {
-      setStatusError(NOTSAVED);
-    }
-  }
-
-  /**
-   * Rutin som tar bort ett konto(accountId) på kund(pNr)
-   */
-  private static void closeBankAccount() {
-    String strKonto = tfKontoNr[10].getSelectionModel().getSelectedItem();
-    try {
-      if (!strKonto.isBlank()) {
-        String str = BankLogic.closeAccount(tfPNo[10].getText(), Integer.parseInt(strKonto));
-        if (str != null) {
-          List<String> result = new ArrayList<>();
-          result.add(str);
-          putCenterText(result);
-        }
-      }
-    } catch (Exception e) {
-      setStatusError("Felaktigt kontonummer: " + strKonto);
-    }
-
-  }
-
-  /**
-   * Rutin som skapar ett kreditkonto för person(pNo)
-   */
-  private static void createBankCreditAccount() {
-    int accountId = BankLogic.createCreditAccount(tfPNo[5].getText());
-    if (accountId > 0) {
-      List<String> result = new ArrayList<>();
-      result.add("Kontonummer: " + accountId);
-      putCenterText(result);
-    } else {
-      setStatusError(NOTSAVED);
-    }
-  }
-
-  /**
-   * Rutin som skapar en kund med f-namn, e-namn och pNr
-   */
-  private static void createBankCustomer() {
-    if (BankLogic.createCustomer(tfName[0].getText(), tfSurname[0].getText(), tfPNo[0].getText())) {
-      setStatusOk(SAVED);
-    } else {
-      setStatusError(NOTSAVED);
-    }
-  }
-
-  /**
-   * Rutin som skapar ett sparkonto för kund pNr
-   */
-  private static void createBankSavingAccount() {
-    int accountId = BankLogic.createSavingsAccount(tfPNo[4].getText());
-    if (accountId > 0) {
-      List<String> result = new ArrayList<>();
-      result.add("Kontonummer: " + accountId);
-      putCenterText(result);
-    } else {
-      setStatusError(NOTSAVED);
-    }
-  }
-
-  /**
-   * Rutin som tar bort en kund(pNo)
-   */
-  private static void deletBankCustomer() {
-    List<String> result = BankLogic.deleteCustomer(tfPNo[3].getText());
-    if (result != null) {
-      putCenterText(result);
-    }
-  }
-
-  /**
-   * Rutin som sätter in pengar på ett konto
-   */
-  private static void depositBankAccount() {
-    String strKonto = tfKontoNr[7].getSelectionModel().getSelectedItem();
-    String strBelopp = tfBelopp[7].getText();
-    try {
-      if (BankLogic.deposit(tfPNo[7].getText(), Integer.parseInt(strKonto), Integer.parseInt(strBelopp))) {
-        setStatusOk(SAVED);
-      } else {
-        setStatusError(NOTSAVED);
-      }
-    } catch (Exception e) {
-      setStatusError("Felaktiga värden: " + strKonto + "/" + strBelopp);
-    }
-  }
-
-  /**
-   * Rutin som hämtar saldo för ett konto
-   */
-  private static void getBankAccount() {
-    String strKonto = tfKontoNr[6].getSelectionModel().getSelectedItem();
-    try {
-      if (!strKonto.isBlank()) {
-        String str = BankLogic.getAccount(tfPNo[6].getText(), Integer.parseInt(strKonto));
-        if (str != null) {
-          List<String> result = new ArrayList<>();
-          result.add(str);
-          putCenterText(result);
-        }
-      }
-    } catch (Exception e) {
-      setStatusError("Felaktigt Kontonummer: " + strKonto);
-    }
-  }
-
-  /**
-   * Rutin som hämtar alla kunder och visar det i fönster Center
-   */
-  private static void getBankAllCustomers() {
-    List<String> result = BankLogic.getAllCustomers();
-    if (result != null) {
-      putCenterText(result);
-    }
-  }
-
-  /**
-   * Rutin som tar fram en kund med konton
-   */
-  private static void getBankCustomer() {
-    List<String> result = BankLogic.getCustomer(tfPNo[1].getText());
-    if (result != null) {
-      putCenterText(result);
-    }
-  }
-
-  /**
-   * Rutin som hämtar alla transaktioner för ett konto
-   */
-  private static void getBankTransactions() {
-    String strKonto = tfKontoNr[9].getSelectionModel().getSelectedItem();
-    try {
-      if (!strKonto.isBlank()) {
-        List<String> result = BankLogic.getTransactions(tfPNo[9].getText(), Integer.parseInt(strKonto));
-        if (result != null) {
-          if (saveToFile) {
-            putFileTransactions(result);
-          } else {
-            putCenterText(result);
-          }
-        }
-      }
-    } catch (Exception e) {
-      setStatusError("Felaktigt kontonummer: " + strKonto);
     }
   }
 
@@ -486,19 +221,6 @@ public class Main extends Application {
     tfResultList.addAll(strResult);
   }
 
-  private static void putFileBank() {
-    String strDate = sdf.format(new Date());
-    String strFiles = "src/handan/files/bank-" + strDate + ".dat";
-    try (FileOutputStream fos = new FileOutputStream(strFiles, true);
-        ObjectOutputStream oos = new ObjectOutputStream(fos)) {
-      oos.writeObject(bank);
-      setStatusOk("Sparad till fil: " + strFiles);
-    } catch (IOException e) {
-      setStatusError("Sökväg/Åtkomst nekad");
-      e.printStackTrace();
-    }
-  }
-
   /**
    * Hjälprutin som skriver transaktioner till filen, givet att result är inte
    * null.
@@ -547,21 +269,332 @@ public class Main extends Application {
     statusText.setTextFill(Color.GREEN);
   }
 
+  // bank-hanteraren
+  private BankLogic bank = new BankLogic();
+
   /**
-   * Rutin som tar ut pengar från ett konto
+   * Rutin som fixar alla konton till ett pNr, Givet att pNr är ifyllt
+   *
+   * @param index - Menyvalet
    */
-  private static void withdrawBankAccount() {
+  private void bankAccountList(short index) {
+    switch (index) {
+    case 6, 7, 8, 9, 10:
+      List<String> result = bank.getAccountList(tfPNo[index].getText());
+      tfKontoList.clear();
+      if (result != null) {
+        tfKontoList.addAll(result);
+      }
+      break;
+    default:
+      break;
+    }
+  }
+
+  /**
+   * Rutin som utför kommandon under Kund
+   *
+   * @param index - Menyvalet
+   */
+  private void bankMenuCustomer(short index) {
+    switch (index) {
+    case 0, 1, 2, 3: // Kund kommando
+      borderPane.setLeft(vbox[index]);
+      break;
+    case 4: // Lista alla kunder
+      getBankAllCustomers();
+      break;
+    default:
+      setStatusError("Kund, index = " + index);
+      break;
+    }
+  }
+
+  /**
+   * Rutin som utför kommando under File
+   *
+   * @param index - Menyvalet
+   */
+  private void bankMenuFile(short index) {
+    switch (index) {
+    case 0: // Spara banken
+      putFileBank();
+      break;
+    case 1: // Läs in banken
+      getFileBank();
+      break;
+    case 2: // Spara transaktioner
+      saveToFile = true;
+      borderPane.setLeft(vbox[5 + 4]);
+      break;
+    case 3: // Visa transaktioner
+      getFileTransactions();
+      break;
+    case 4: // Avsluta
+      System.exit(0);
+      break;
+    default:
+      setStatusError("File, index = " + index);
+      break;
+    }
+  }
+
+  /**
+   * Rutin som anropas när användaren har tryckt på en Button-knapp
+   *
+   * @param index - Knappens syfte
+   */
+  private void bankMenuSave(short index) {
+    switch (index) {
+    case 0: // Spara ny kund
+      createBankCustomer();
+      break;
+    case 1: // Hämta EN kund
+      getBankCustomer();
+      break;
+    case 2: // Byt namn på kund
+      changeBankCustomerName();
+      break;
+    case 3: // Ta bort kund
+      deletBankCustomer();
+      break;
+    case 4: // Skapa Sparkonto
+      createBankSavingAccount();
+      break;
+    case 5: // Skapa Kreditkonto
+      createBankCreditAccount();
+      break;
+    case 6: // Saldo
+      getBankAccount();
+      break;
+    case 7: // Sätta in
+      depositBankAccount();
+      break;
+    case 8: // Ta ut
+      withdrawBankAccount();
+      break;
+    case 9: // Transaktioner
+      getBankTransactions();
+      break;
+    case 10: // Ta bort konto
+      closeBankAccount();
+      break;
+    default:
+      setStatusError("Save button, index = " + index);
+      break;
+    }
+  }
+
+  /**
+   * Rutin som byte namn på en kund(pNr)
+   */
+  private void changeBankCustomerName() {
+    if (bank.changeCustomerName(tfName[2].getText(), tfSurname[2].getText(), tfPNo[2].getText())) {
+      setStatusOk(SAVED);
+    } else {
+      setStatusError(NOTSAVED);
+    }
+  }
+
+  /**
+   * Rutin som tar bort ett konto(accountId) på kund(pNr)
+   */
+  private void closeBankAccount() {
+    String strKonto = tfKontoNr[10].getSelectionModel().getSelectedItem();
     try {
-      int accountId = Integer.parseInt(tfKontoNr[8].getSelectionModel().getSelectedItem());
-      int amount = Integer.parseInt(tfBelopp[8].getText());
-      if (BankLogic.withdraw(tfPNo[8].getText(), accountId, amount)) {
+      if (!strKonto.isBlank()) {
+        String str = bank.closeAccount(tfPNo[10].getText(), Integer.parseInt(strKonto));
+        if (str != null) {
+          List<String> result = new ArrayList<>();
+          result.add(str);
+          putCenterText(result);
+        }
+      }
+    } catch (Exception e) {
+      setStatusError("Felaktigt kontonummer: " + strKonto);
+    }
+
+  }
+
+  /**
+   * Rutin som skapar ett kreditkonto för person(pNo)
+   */
+  private void createBankCreditAccount() {
+    int accountId = bank.createCreditAccount(tfPNo[5].getText());
+    if (accountId > 0) {
+      List<String> result = new ArrayList<>();
+      result.add("Kontonummer: " + accountId);
+      putCenterText(result);
+    } else {
+      setStatusError(NOTSAVED);
+    }
+  }
+
+  /**
+   * Rutin som skapar en kund med f-namn, e-namn och pNr
+   */
+  private void createBankCustomer() {
+    if (bank.createCustomer(tfName[0].getText(), tfSurname[0].getText(), tfPNo[0].getText())) {
+      setStatusOk(SAVED);
+    } else {
+      setStatusError(NOTSAVED);
+    }
+  }
+
+  /**
+   * Rutin som skapar ett sparkonto för kund pNr
+   */
+  private void createBankSavingAccount() {
+    int accountId = bank.createSavingsAccount(tfPNo[4].getText());
+    if (accountId > 0) {
+      List<String> result = new ArrayList<>();
+      result.add("Kontonummer: " + accountId);
+      putCenterText(result);
+    } else {
+      setStatusError(NOTSAVED);
+    }
+  }
+
+  /**
+   * Rutin som tar bort en kund(pNo)
+   */
+  private void deletBankCustomer() {
+    List<String> result = bank.deleteCustomer(tfPNo[3].getText());
+    if (result != null) {
+      putCenterText(result);
+    }
+  }
+
+  /**
+   * Rutin som sätter in pengar på ett konto
+   */
+  private void depositBankAccount() {
+    String strKonto = tfKontoNr[7].getSelectionModel().getSelectedItem();
+    String strBelopp = tfBelopp[7].getText();
+    try {
+      if (bank.deposit(tfPNo[7].getText(), Integer.parseInt(strKonto), Integer.parseInt(strBelopp))) {
         setStatusOk(SAVED);
       } else {
         setStatusError(NOTSAVED);
       }
     } catch (Exception e) {
-      setStatusError(
-          "Felaktiga värden: " + tfKontoNr[8].getSelectionModel().getSelectedItem() + "/" + tfBelopp[8].getText());
+      setStatusError("Felaktiga värden: " + strKonto + "/" + strBelopp);
+    }
+  }
+
+  /**
+   * Rutin som hämtar saldo för ett konto
+   */
+  private void getBankAccount() {
+    String strKonto = tfKontoNr[6].getSelectionModel().getSelectedItem();
+    try {
+      if (!strKonto.isBlank()) {
+        String str = bank.getAccount(tfPNo[6].getText(), Integer.parseInt(strKonto));
+        if (str != null) {
+          List<String> result = new ArrayList<>();
+          result.add(str);
+          putCenterText(result);
+        }
+      }
+    } catch (Exception e) {
+      setStatusError("Felaktigt Kontonummer: " + strKonto);
+    }
+  }
+
+  /**
+   * Rutin som hämtar alla kunder och visar det i fönster Center
+   */
+  private void getBankAllCustomers() {
+    List<String> result = bank.getAllCustomers();
+    if (result != null) {
+      putCenterText(result);
+    }
+  }
+
+  /**
+   * Rutin som tar fram en kund med konton
+   */
+  private void getBankCustomer() {
+    List<String> result = bank.getCustomer(tfPNo[1].getText());
+    if (result != null) {
+      putCenterText(result);
+    }
+  }
+
+  /**
+   * Rutin som hämtar alla transaktioner för ett konto
+   */
+  private void getBankTransactions() {
+    String strKonto = tfKontoNr[9].getSelectionModel().getSelectedItem();
+    try {
+      if (!strKonto.isBlank()) {
+        List<String> result = bank.getTransactions(tfPNo[9].getText(), Integer.parseInt(strKonto));
+        if (result != null) {
+          if (saveToFile) {
+            putFileTransactions(result);
+          } else {
+            putCenterText(result);
+          }
+        }
+      }
+    } catch (Exception e) {
+      setStatusError("Felaktigt kontonummer: " + strKonto);
+    }
+  }
+
+  private void getFileBank() {
+    FileChooser fileChooser = new FileChooser();
+    fileChooser.setTitle("Öppna bankfil");
+    fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Bankfiler", "*.dat"));
+
+    // Sätt startkatalogen
+    File initialDir = new File("src/handan/files");
+    fileChooser.setInitialDirectory(initialDir.exists() ? initialDir : new File(System.getProperty("user.home")));
+
+    File file = fileChooser.showOpenDialog(new Stage());
+    if (file == null) {
+      return;
+    }
+
+    boolean readIn = true;
+    // Kolla om banken har kunder
+    if (!bank.getAllCustomers().isEmpty()) {
+      Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+      alert.setTitle("Öppna bankfil");
+      alert.setHeaderText("Vill du läsa in en ny bankfil?");
+      alert.setContentText("Detta kommer att radera alla nuvarande kunder.");
+      Optional<ButtonType> result = alert.showAndWait();
+      readIn = (result.isPresent() && result.get() == ButtonType.OK);
+    }
+    if (readIn) {
+      try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
+        // Läs in kontonummer
+        Account.setLastAssignedNumber(in.readInt());
+        // Läs in bank objektet
+        bank = (BankLogic) in.readObject();
+        setStatusOk("Inläst från fil: " + file.getName());
+      } catch (IOException | ClassNotFoundException e) {
+        setStatusError("Fel vid läsning av fil: " + file.getAbsolutePath());
+        e.printStackTrace();
+      }
+    }
+  }
+
+  /**
+   * Hjälprutin som sparar bank objektet till en fil
+   */
+  private void putFileBank() {
+    String strDate = sdf.format(new Date());
+    String strFiles = "src/handan/files/bank-" + strDate + ".dat";
+    try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(strFiles))) {
+      // Spara kontonummer
+      oos.writeInt(Account.getLastAssignedNumber());
+      // Spara bank objektet
+      oos.writeObject(bank);
+      setStatusOk("Sparad till fil: " + strFiles);
+    } catch (IOException e) {
+      setStatusError("Sökväg/Åtkomst nekad");
+      e.printStackTrace();
     }
   }
 
@@ -676,6 +709,24 @@ public class Main extends Application {
       primaryStage.show();
     } catch (Exception e) {
       e.printStackTrace();
+    }
+  }
+
+  /**
+   * Rutin som tar ut pengar från ett konto
+   */
+  private void withdrawBankAccount() {
+    try {
+      int accountId = Integer.parseInt(tfKontoNr[8].getSelectionModel().getSelectedItem());
+      int amount = Integer.parseInt(tfBelopp[8].getText());
+      if (bank.withdraw(tfPNo[8].getText(), accountId, amount)) {
+        setStatusOk(SAVED);
+      } else {
+        setStatusError(NOTSAVED);
+      }
+    } catch (Exception e) {
+      setStatusError(
+          "Felaktiga värden: " + tfKontoNr[8].getSelectionModel().getSelectedItem() + "/" + tfBelopp[8].getText());
     }
   }
 }

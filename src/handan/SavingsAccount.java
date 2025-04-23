@@ -6,7 +6,17 @@
  */
 package handan;
 
-public class SavingsAccount extends Account {
+/**
+ * Importsatser
+ */
+import java.io.Serializable;
+
+public class SavingsAccount extends Account implements Serializable {
+
+  /**
+   * Versionshanterings variabel till deserialisering
+   */
+  private static final long serialVersionUID = 611114L;
 
   // Variabler för enskilt sparkonto
   private boolean notFirstFree; // Första uttaget är fritt, ingen uttagsränta.

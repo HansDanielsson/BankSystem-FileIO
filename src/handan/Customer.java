@@ -4,10 +4,19 @@
  */
 package handan;
 
+/**
+ * Importsatser
+ */
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Customer {
+public class Customer implements Serializable {
+  /**
+   * Versionshanterings variabel till deserialisering
+   */
+  private static final long serialVersionUID = 611114L;
+
   // Privata variabler till kund.
   private String customerName;
   private String customerSurname;
@@ -54,6 +63,14 @@ public class Customer {
       result = true;
     }
     return result;
+  }
+
+  /**
+   * Rutin som tar bort accounts listan med konton
+   */
+  protected void deleteAccounts() {
+    accounts.clear();
+    accounts = null;
   }
 
   /**

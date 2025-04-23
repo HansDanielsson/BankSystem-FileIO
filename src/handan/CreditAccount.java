@@ -5,7 +5,17 @@
  */
 package handan;
 
-public class CreditAccount extends Account {
+/**
+ * Importsatser
+ */
+import java.io.Serializable;
+
+public class CreditAccount extends Account implements Serializable {
+
+  /**
+   * Versionshanterings variabel till deserialisering
+   */
+  private static final long serialVersionUID = 611114L;
 
   // Variabler för enskilt kreditkonto
   private int creditLimit; // Kreditgräns (5000 kr)
