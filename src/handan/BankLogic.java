@@ -79,7 +79,7 @@ public class BankLogic implements Serializable {
 
     String result = account.infoAccount() + " " + account.calculateInterest();
     // Ta bort Transaktionerna
-    account.getAccountTransactions().clear();
+    account.deleteTransactions();
     closeCustomer.getAccounts().remove(account);
     return result;
   }
@@ -238,6 +238,16 @@ public class BankLogic implements Serializable {
    */
   public List<String> getAllCustomers() {
     return bankCustomer.stream().map(Customer::toString).collect(Collectors.toUnmodifiableList());
+  }
+
+  /**
+   * Rutin som returnerar alla kunder i orginal listan. Behövs för att kunna ta
+   * bort allt i banken
+   *
+   * @return , bankCustomer
+   */
+  protected List<Customer> getAllCustomersList() {
+    return bankCustomer;
   }
 
   /**

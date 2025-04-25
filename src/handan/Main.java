@@ -7,21 +7,8 @@ package handan;
 /**
  * Importsatser
  */
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Importsatser för JavaFX med olika API rutiner
@@ -30,23 +17,19 @@ import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 public class Main extends Application {
@@ -55,8 +38,6 @@ public class Main extends Application {
   private static final String NOTSAVED = "Ej sparad";
 
   private static boolean saveToFile = false; // Spara till fil, för transaktioner.
-
-  private static final SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd-HHmmss");
 
   // Skapar upp en BorderPane
   private static BorderPane borderPane = new BorderPane();
@@ -116,13 +97,11 @@ public class Main extends Application {
 
   // Bilder att visa i högra delen
   private static final Image imageBag = new Image("file:src/handan/files/bag-96x96.png");
-
   private static final Image imagePiggy = new Image("file:src/handan/files/piggy-bank-96x96.png");
   private static final Image imageSafe = new Image("file:src/handan/files/safe-96x96.png");
   // Skapa 3 ImageView för att visa bilderna
   private static ImageView bagImageView = new ImageView(imageBag);
   private static ImageView piggyImageView = new ImageView(imagePiggy);
-
   private static ImageView safeImageView = new ImageView(imageSafe);
   private static VBox imageVBox = new VBox(20);
   private static ListView<String> centralResult = new ListView<>(tfResultList);
@@ -164,48 +143,6 @@ public class Main extends Application {
     }
   }
 
-  /**
-   * Rutin som öppnar en fil och läser in transaktioner till en dialog ruta med
-   * scroll
-   */
-  private static void getFileTransactions() {
-    FileChooser fileChooser = new FileChooser();
-    fileChooser.setTitle("Öppna transaktionsfil");
-    fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Textfiler", "*.txt"));
-
-    // Sätt startkatalogen
-    File initialDir = new File("src/handan/files");
-    fileChooser.setInitialDirectory(initialDir.exists() ? initialDir : new File(System.getProperty("user.home")));
-
-    File file = fileChooser.showOpenDialog(new Stage());
-    if (file == null) {
-      return;
-    }
-
-    String content;
-    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-      content = br.lines().collect(Collectors.joining(System.lineSeparator()));
-    } catch (IOException e) {
-      setStatusError("Fel vid läsning av fil: " + file.getAbsolutePath());
-      return;
-    }
-
-    // Skapa en TextArea för visning
-    TextArea textArea = new TextArea(content);
-    textArea.setEditable(false);
-    textArea.setWrapText(true);
-    textArea.setMaxWidth(600);
-    textArea.setMaxHeight(400);
-
-    // Visa i alert-dialog
-    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-    alert.setTitle("Transaktioner");
-    alert.setHeaderText("Innehåll i filen: " + file.getName());
-    alert.getDialogPane().setContent(textArea);
-    alert.setResizable(true);
-    alert.showAndWait();
-  }
-
   public static void main(String[] args) {
     launch(args);
   }
@@ -219,34 +156,6 @@ public class Main extends Application {
   private static void putCenterText(List<String> strResult) {
     tfResultList.clear();
     tfResultList.addAll(strResult);
-  }
-
-  /**
-   * Hjälprutin som skriver transaktioner till filen, givet att result är inte
-   * null.
-   *
-   * @param result - Transaktionerna
-   */
-  private static void putFileTransactions(List<String> result) {
-    String strDate = sdf.format(new Date());
-    String strFiles = "src/handan/files/trans-" + strDate + ".txt";
-    try (FileWriter fileWriter = new FileWriter(strFiles, true)) {
-
-      String dateOnly = strDate.split("-")[0];
-      fileWriter.write("Datum: " + dateOnly + System.lineSeparator());
-      fileWriter.write("====================================" + System.lineSeparator());
-
-      for (String str : result) {
-        fileWriter.write(str + System.lineSeparator());
-      }
-
-      fileWriter.write("====================================" + System.lineSeparator());
-
-      setStatusOk("Sparad till fil: " + strFiles);
-    } catch (IOException e) {
-      setStatusError("Sökväg/Åtkomst nekad");
-      e.printStackTrace();
-    }
   }
 
   /**
@@ -298,15 +207,9 @@ public class Main extends Application {
    */
   private void bankMenuCustomer(short index) {
     switch (index) {
-    case 0, 1, 2, 3: // Kund kommando
-      borderPane.setLeft(vbox[index]);
-      break;
-    case 4: // Lista alla kunder
-      getBankAllCustomers();
-      break;
-    default:
-      setStatusError("Kund, index = " + index);
-      break;
+    case 0, 1, 2, 3 -> borderPane.setLeft(vbox[index]);
+    case 4 -> getBankAllCustomers();
+    default -> setStatusError("Kund, index = " + index);
     }
   }
 
@@ -317,25 +220,12 @@ public class Main extends Application {
    */
   private void bankMenuFile(short index) {
     switch (index) {
-    case 0: // Spara banken
-      putFileBank();
-      break;
-    case 1: // Läs in banken
-      getFileBank();
-      break;
-    case 2: // Spara transaktioner
-      saveToFile = true;
-      borderPane.setLeft(vbox[5 + 4]);
-      break;
-    case 3: // Visa transaktioner
-      getFileTransactions();
-      break;
-    case 4: // Avsluta
-      System.exit(0);
-      break;
-    default:
-      setStatusError("File, index = " + index);
-      break;
+    case 0 -> saveBankToFile();
+    case 1 -> loadBankFromFile();
+    case 2 -> prepareTransactionSave();
+    case 3 -> showTransactions();
+    case 4 -> System.exit(0);
+    default -> setStatusError("File, index = " + index);
     }
   }
 
@@ -346,42 +236,18 @@ public class Main extends Application {
    */
   private void bankMenuSave(short index) {
     switch (index) {
-    case 0: // Spara ny kund
-      createBankCustomer();
-      break;
-    case 1: // Hämta EN kund
-      getBankCustomer();
-      break;
-    case 2: // Byt namn på kund
-      changeBankCustomerName();
-      break;
-    case 3: // Ta bort kund
-      deletBankCustomer();
-      break;
-    case 4: // Skapa Sparkonto
-      createBankSavingAccount();
-      break;
-    case 5: // Skapa Kreditkonto
-      createBankCreditAccount();
-      break;
-    case 6: // Saldo
-      getBankAccount();
-      break;
-    case 7: // Sätta in
-      depositBankAccount();
-      break;
-    case 8: // Ta ut
-      withdrawBankAccount();
-      break;
-    case 9: // Transaktioner
-      getBankTransactions();
-      break;
-    case 10: // Ta bort konto
-      closeBankAccount();
-      break;
-    default:
-      setStatusError("Save button, index = " + index);
-      break;
+    case 0 -> createBankCustomer();
+    case 1 -> getBankCustomer();
+    case 2 -> changeBankCustomerName();
+    case 3 -> deletBankCustomer();
+    case 4 -> createBankSavingAccount();
+    case 5 -> createBankCreditAccount();
+    case 6 -> getBankAccount();
+    case 7 -> depositBankAccount();
+    case 8 -> withdrawBankAccount();
+    case 9 -> getBankTransactions();
+    case 10 -> closeBankAccount();
+    default -> setStatusError("Save button, index = " + index);
     }
   }
 
@@ -393,6 +259,17 @@ public class Main extends Application {
       setStatusOk(SAVED);
     } else {
       setStatusError(NOTSAVED);
+    }
+  }
+
+  /**
+   * Rutin som rensar banken, tar bort alla kunder och konton
+   */
+  private void clearCurrentBank() {
+    // Rensa banken
+    for (Customer customer : bank.getAllCustomersList()) {
+      customer.getAccounts().forEach(Account::deleteTransactions);
+      customer.deleteAccounts();
     }
   }
 
@@ -531,7 +408,11 @@ public class Main extends Application {
         List<String> result = bank.getTransactions(tfPNo[9].getText(), Integer.parseInt(strKonto));
         if (result != null) {
           if (saveToFile) {
-            putFileTransactions(result);
+            if (BankFileIO.putFileTransactions(result)) {
+              setStatusOk("Sparad till fil");
+            } else {
+              setStatusError("Sökväg/Åtkomst nekad");
+            }
           } else {
             putCenterText(result);
           }
@@ -542,59 +423,52 @@ public class Main extends Application {
     }
   }
 
-  private void getFileBank() {
-    FileChooser fileChooser = new FileChooser();
-    fileChooser.setTitle("Öppna bankfil");
-    fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Bankfiler", "*.dat"));
-
-    // Sätt startkatalogen
-    File initialDir = new File("src/handan/files");
-    fileChooser.setInitialDirectory(initialDir.exists() ? initialDir : new File(System.getProperty("user.home")));
-
-    File file = fileChooser.showOpenDialog(new Stage());
-    if (file == null) {
+  /**
+   * Rutin som läser in banken från en fil
+   */
+  private void loadBankFromFile() {
+    // Läs in banken, man måste fråga först.
+    if (!bank.getAllCustomersList().isEmpty() && !BankFileIO.alertBankErase()) {
+      setStatusOk("Kunderna är kvar, ingen ny inläsning!");
       return;
     }
 
-    boolean readIn = true;
-    // Kolla om banken har kunder
-    if (!bank.getAllCustomers().isEmpty()) {
-      Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-      alert.setTitle("Öppna bankfil");
-      alert.setHeaderText("Vill du läsa in en ny bankfil?");
-      alert.setContentText("Detta kommer att radera alla nuvarande kunder.");
-      Optional<ButtonType> result = alert.showAndWait();
-      readIn = (result.isPresent() && result.get() == ButtonType.OK);
-    }
-    if (readIn) {
-      try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
-        // Läs in kontonummer
-        Account.setLastAssignedNumber(in.readInt());
-        // Läs in bank objektet
-        bank = (BankLogic) in.readObject();
-        setStatusOk("Inläst från fil: " + file.getName());
-      } catch (IOException | ClassNotFoundException e) {
-        setStatusError("Fel vid läsning av fil: " + file.getAbsolutePath());
-        e.printStackTrace();
-      }
+    BankLogic newBank = BankFileIO.getFileBank();
+    if (newBank != null) {
+      clearCurrentBank(); // Rensa banken
+      bank = newBank;
+      setStatusOk("Inläst från vald fil");
+    } else {
+      setStatusError("Fel vid inläsning av bankfil");
     }
   }
 
   /**
-   * Hjälprutin som sparar bank objektet till en fil
+   * Rutin som förbereder för att spara transaktioner till en fil
    */
-  private void putFileBank() {
-    String strDate = sdf.format(new Date());
-    String strFiles = "src/handan/files/bank-" + strDate + ".dat";
-    try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(strFiles))) {
-      // Spara kontonummer
-      oos.writeInt(Account.getLastAssignedNumber());
-      // Spara bank objektet
-      oos.writeObject(bank);
-      setStatusOk("Sparad till fil: " + strFiles);
-    } catch (IOException e) {
-      setStatusError("Sökväg/Åtkomst nekad");
-      e.printStackTrace();
+  private void prepareTransactionSave() {
+    saveToFile = true;
+    borderPane.setLeft(vbox[9]);
+  }
+
+  /**
+   * Rutin som sparar banken till en fil
+   */
+  private void saveBankToFile() {
+    String strFile = BankFileIO.putFileBank(bank);
+    if (strFile.startsWith("Sparad")) {
+      setStatusOk(strFile);
+    } else {
+      setStatusError(strFile);
+    }
+  }
+
+  /**
+   * Rutin som visar transaktioner i en dialogruta
+   */
+  private void showTransactions() {
+    if (BankFileIO.getFileTransactions()) {
+      setStatusError("Fel vid visning av transaktioner");
     }
   }
 

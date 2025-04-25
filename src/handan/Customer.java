@@ -66,7 +66,8 @@ public class Customer implements Serializable {
   }
 
   /**
-   * Rutin som tar bort accounts listan med konton
+   * Rutin som tar bort konton till en kund givet att alla transaktioner redan är
+   * bortagna
    */
   protected void deleteAccounts() {
     accounts.clear();
