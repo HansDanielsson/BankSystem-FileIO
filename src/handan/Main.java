@@ -407,11 +407,14 @@ public class Main extends Application {
       if (!strKonto.isBlank()) {
         List<String> result = bank.getTransactions(tfPNo[9].getText(), Integer.parseInt(strKonto));
         if (result != null) {
+          // Lägg till text först i listan
+          result.add(0, "Transaktioner för konto: " + strKonto);
           if (saveToFile) {
-            if (BankFileIO.putFileTransactions(result)) {
-              setStatusOk("Sparad till fil");
+            String strFile = BankFileIO.putFileTransactions(result);
+            if (strFile.startsWith("Sparad")) {
+              setStatusOk(strFile);
             } else {
-              setStatusError("Sökväg/Åtkomst nekad");
+              setStatusError(strFile);
             }
           } else {
             putCenterText(result);

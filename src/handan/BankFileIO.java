@@ -150,10 +150,10 @@ public class BankFileIO {
    *
    * @param result - Transaktionerna
    */
-  protected static boolean putFileTransactions(List<String> result) {
+  protected static String putFileTransactions(List<String> result) {
     String strDate = sdf.format(new Date());
-    String strFiles = "src/handan/files/bank-" + strDate + ".txt";
-    try (FileWriter fileWriter = new FileWriter(strFiles, true)) {
+    String strFile = "src/handan/files/bank-" + strDate + ".txt";
+    try (FileWriter fileWriter = new FileWriter(strFile, true)) {
 
       String dateOnly = strDate.split("-")[0];
       fileWriter.write("Datum: " + dateOnly + System.lineSeparator());
@@ -164,10 +164,10 @@ public class BankFileIO {
       }
 
       fileWriter.write("====================================" + System.lineSeparator());
-      return true;
+      return "Sparad till fil: " + strFile;
     } catch (IOException e) {
       e.printStackTrace();
-      return false;
+      return "Sökväg/Åtkomst nekad: " + strFile;
     }
   }
 }
