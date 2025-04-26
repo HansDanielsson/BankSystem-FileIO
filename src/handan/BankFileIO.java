@@ -132,7 +132,14 @@ public class BankFileIO {
   protected static String putFileBank(BankLogic bank) {
     String strDate = sdf.format(new Date());
     String strFiles = "src/handan/files/bank-" + strDate + ".dat";
+    try {
+      Thread.sleep(1000); // Vänta en sekund för att säkerställa att filens namn inte kan skapas igen,
+                          // ska vara unikt namn.
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
     try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(strFiles))) {
+
       // Spara kontonummer
       oos.writeInt(Account.getLastAssignedNumber());
       // Spara bank objektet
@@ -153,6 +160,12 @@ public class BankFileIO {
   protected static String putFileTransactions(List<String> result) {
     String strDate = sdf.format(new Date());
     String strFile = "src/handan/files/bank-" + strDate + ".txt";
+    try {
+      Thread.sleep(1000); // Vänta en sekund för att säkerställa att filens namn inte kan skapas igen,
+                          // ska vara unikt namn.
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
     try (FileWriter fileWriter = new FileWriter(strFile, true)) {
 
       String dateOnly = strDate.split("-")[0];

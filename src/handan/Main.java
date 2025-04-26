@@ -407,22 +407,25 @@ public class Main extends Application {
       if (!strKonto.isBlank()) {
         List<String> result = bank.getTransactions(tfPNo[9].getText(), Integer.parseInt(strKonto));
         if (result != null) {
-          // Lägg till text först i listan
-          result.add(0, "Transaktioner för konto: " + strKonto);
+          List<String> newResult = new ArrayList<>();
+          // Lägg till text först i immutable-lista
+          newResult.add("Transaktioner för konto: " + strKonto);
+          newResult.addAll(result);
           if (saveToFile) {
-            String strFile = BankFileIO.putFileTransactions(result);
+            String strFile = BankFileIO.putFileTransactions(newResult);
             if (strFile.startsWith("Sparad")) {
               setStatusOk(strFile);
             } else {
               setStatusError(strFile);
             }
           } else {
-            putCenterText(result);
+            putCenterText(newResult);
           }
         }
       }
     } catch (Exception e) {
       setStatusError("Felaktigt kontonummer: " + strKonto);
+      e.printStackTrace();
     }
   }
 
@@ -458,6 +461,10 @@ public class Main extends Application {
    * Rutin som sparar banken till en fil
    */
   private void saveBankToFile() {
+    if (bank.getAllCustomersList().isEmpty()) {
+      setStatusError("Inga kunder i banken");
+      return;
+    }
     String strFile = BankFileIO.putFileBank(bank);
     if (strFile.startsWith("Sparad")) {
       setStatusOk(strFile);
