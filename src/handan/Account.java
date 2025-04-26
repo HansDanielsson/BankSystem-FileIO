@@ -156,7 +156,9 @@ public abstract class Account implements Serializable {
    */
   protected void deleteTransactions() {
     // Tar bort alla transaktioner
-    transactions.clear();
+    if (transactions != null) {
+      transactions.clear();
+    }
     transactions = null;
   }
 

@@ -70,7 +70,9 @@ public class Customer implements Serializable {
    * bortagna
    */
   protected void deleteAccounts() {
-    accounts.clear();
+    if (accounts != null) {
+      accounts.clear();
+    }
     accounts = null;
   }
 

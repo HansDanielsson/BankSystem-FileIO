@@ -9,6 +9,7 @@ package handan;
  */
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Importsatser för JavaFX med olika API rutiner
@@ -115,14 +116,14 @@ public class Main extends Application {
    */
   private static void bankBeloppCheck(short index) {
     String str = tfBelopp[index].getText();
-    int pos = str.indexOf("."); // Ta bort allt efter .
-    if (pos > -1) {
-      str = str.substring(0, pos);
+    int dotPos = str.indexOf("."); // Ta bort allt efter .
+    int commaPos = str.indexOf(","); // Ta bort allt efter ,
+    int cutPos = (dotPos == -1) ? commaPos : (commaPos == -1 ? dotPos : Math.min(dotPos, commaPos));
+
+    if (cutPos > -1) {
+      str = str.substring(0, cutPos);
     }
-    pos = str.indexOf(","); // Ta bort allt efter ,
-    if (pos > -1) {
-      str = str.substring(0, pos);
-    }
+
     tfBelopp[index].setText(str);
   }
 
@@ -263,14 +264,12 @@ public class Main extends Application {
   }
 
   /**
-   * Rutin som rensar banken, tar bort alla kunder och konton
+   * Rutin som rensar banken, tar bort alla kunder och konton och transaktioner
    */
   private void clearCurrentBank() {
     // Rensa banken
-    for (Customer customer : bank.getAllCustomersList()) {
-      customer.getAccounts().forEach(Account::deleteTransactions);
-      customer.deleteAccounts();
-    }
+    bank.getAllCustomersList().stream().flatMap(customer -> customer.getAccounts().stream())
+        .forEach(Account::deleteTransactions);
   }
 
   /**
@@ -282,9 +281,7 @@ public class Main extends Application {
       if (!strKonto.isBlank()) {
         String str = bank.closeAccount(tfPNo[10].getText(), Integer.parseInt(strKonto));
         if (str != null) {
-          List<String> result = new ArrayList<>();
-          result.add(str);
-          putCenterText(result);
+          putCenterText(List.of(str));
         }
       }
     } catch (Exception e) {
@@ -403,14 +400,15 @@ public class Main extends Application {
    */
   private void getBankTransactions() {
     String strKonto = tfKontoNr[9].getSelectionModel().getSelectedItem();
-    try {
-      if (!strKonto.isBlank()) {
-        List<String> result = bank.getTransactions(tfPNo[9].getText(), Integer.parseInt(strKonto));
-        if (result != null) {
-          List<String> newResult = new ArrayList<>();
-          // Lägg till text först i immutable-lista
-          newResult.add("Transaktioner för konto: " + strKonto);
-          newResult.addAll(result);
+    if (strKonto != null && !strKonto.isBlank()) {
+      try {
+        int kontoNummer = Integer.parseInt(strKonto);
+        List<String> result = bank.getTransactions(tfPNo[9].getText(), kontoNummer);
+
+        if (result != null && !result.isEmpty()) {
+          List<String> newResult = Stream.concat(Stream.of("Transaktioner för konto: " + strKonto), result.stream())
+              .toList();
+
           if (saveToFile) {
             String strFile = BankFileIO.putFileTransactions(newResult);
             if (strFile.startsWith("Sparad")) {
@@ -421,11 +419,15 @@ public class Main extends Application {
           } else {
             putCenterText(newResult);
           }
+        } else {
+          setStatusOk("Inga transaktioner för konto: " + strKonto);
         }
+      } catch (NumberFormatException e) {
+        setStatusError("Felaktigt kontonummerformat: " + strKonto);
+      } catch (Exception e) {
+        setStatusError("Ett fel uppstod vid hämtning av transaktioner för konto: " + strKonto);
+        e.printStackTrace();
       }
-    } catch (Exception e) {
-      setStatusError("Felaktigt kontonummer: " + strKonto);
-      e.printStackTrace();
     }
   }
 
