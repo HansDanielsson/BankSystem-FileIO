@@ -4,10 +4,6 @@
  */
 package handan;
 
-/**
- * Importsatser
- */
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -63,7 +59,7 @@ public class Main extends Application {
   private static MenuBar menuBar = new MenuBar(menuFile, menuCustomer, menuAccount);
   // Spara knappen till olika syften
   private static final String[] strButton = { "Spara", "Hämta", "Byt namn", "Ta bort", "Spar", "Kredit", "Saldo",
-      "Sätt in", "Ta ut", "Transaktioner", "Ta bort", "Spara banken", "Läs in banken" };
+      "Sätt in", "Ta ut", "Transaktioner", "Ta bort" };
 
   private static Label[] labelPNo = new Label[strButton.length];
 
@@ -297,9 +293,7 @@ public class Main extends Application {
   private void createBankCreditAccount() {
     int accountId = bank.createCreditAccount(tfPNo[5].getText());
     if (accountId > 0) {
-      List<String> result = new ArrayList<>();
-      result.add("Kontonummer: " + accountId);
-      putCenterText(result);
+      putCenterText(List.of("Kontonummer: " + accountId));
     } else {
       setStatusError(NOTSAVED);
     }
@@ -322,9 +316,7 @@ public class Main extends Application {
   private void createBankSavingAccount() {
     int accountId = bank.createSavingsAccount(tfPNo[4].getText());
     if (accountId > 0) {
-      List<String> result = new ArrayList<>();
-      result.add("Kontonummer: " + accountId);
-      putCenterText(result);
+      putCenterText(List.of("Kontonummer: " + accountId));
     } else {
       setStatusError(NOTSAVED);
     }
@@ -366,9 +358,7 @@ public class Main extends Application {
       if (!strKonto.isBlank()) {
         String str = bank.getAccount(tfPNo[6].getText(), Integer.parseInt(strKonto));
         if (str != null) {
-          List<String> result = new ArrayList<>();
-          result.add(str);
-          putCenterText(result);
+          putCenterText(List.of(str));
         }
       }
     } catch (Exception e) {
@@ -433,6 +423,57 @@ public class Main extends Application {
   }
 
   /**
+   * Rutin som initierar en VBox med olika kontroller
+   *
+   * @param index           - Vilken VBox som ska initieras
+   * @param withName        - Om det ska vara med förnamn
+   * @param withSurname     - Om det ska vara med efternamn
+   * @param withAccountList - Om det ska vara med kontolnr
+   * @param withAmount      - Om det ska vara med belopp
+   */
+  private void initVBox(short index, boolean withName, boolean withSurname, boolean withAccountList,
+      boolean withAmount) {
+    vbox[index] = new VBox(10);
+
+    labelPNo[index] = new Label("Personnummer: ");
+    tfPNo[index] = new TextField();
+    vbox[index].getChildren().addAll(labelPNo[index], tfPNo[index]);
+
+    if (withName) {
+      labelName[index] = new Label("Förnamn: ");
+      tfName[index] = new TextField();
+      vbox[index].getChildren().addAll(labelName[index], tfName[index]);
+    }
+
+    if (withSurname) {
+      labelSurname[index] = new Label("Efternamn: ");
+      tfSurname[index] = new TextField();
+      vbox[index].getChildren().addAll(labelSurname[index], tfSurname[index]);
+    }
+
+    if (withAccountList) {
+      labelKontoNr[index] = new Label("Kontonr: ");
+      tfKontoNr[index] = new ListView<>(tfKontoList);
+      vbox[index].getChildren().addAll(labelKontoNr[index], tfKontoNr[index]);
+    }
+
+    if (withAmount) {
+      labelBelopp[index] = new Label("Belopp: ");
+      tfBelopp[index] = new TextField();
+      vbox[index].getChildren().addAll(labelBelopp[index], tfBelopp[index]);
+    }
+
+    saveButton[index] = new Button(strButton[index]);
+    final short finalIndex = index;
+    saveButton[index].setOnAction(_ -> bankMenuSave(finalIndex));
+    tfPNo[index].focusedProperty().addListener(_ -> bankAccountList(finalIndex));
+    if (withAmount) {
+      tfBelopp[index].focusedProperty().addListener(_ -> bankBeloppCheck(finalIndex));
+    }
+    vbox[index].getChildren().add(saveButton[index]);
+  }
+
+  /**
    * Rutin som läser in banken från en fil
    */
   private void loadBankFromFile() {
@@ -492,8 +533,7 @@ public class Main extends Application {
       // Sätter en titel på fönstret till "BankSystem"
       primaryStage.setTitle("BankSystem");
 
-      // Fixar alla menyer på plats
-      // Initierar olika variabler.
+      // === Meny: File ===
       for (i = 0; i < strMenuFile.length; i++) {
         menuItemFile[i] = new MenuItem(strMenuFile[i]);
         final short indexFile = i;
@@ -504,6 +544,7 @@ public class Main extends Application {
         menuFile.getItems().add(menuItemFile[i]);
       }
 
+      // === Meny: Kund ===
       for (i = 0; i < strMenuCustomer.length; i++) {
         menuItemCustomer[i] = new MenuItem(strMenuCustomer[i]);
         final short indexCustomer = i;
@@ -511,6 +552,7 @@ public class Main extends Application {
         menuCustomer.getItems().add(menuItemCustomer[i]);
       }
 
+      // === Meny: Konton ===
       for (i = 0; i < strMenuAccount.length; i++) {
         menuItemAccount[i] = new MenuItem(strMenuAccount[i]);
         final short indexAccount = i;
@@ -518,63 +560,14 @@ public class Main extends Application {
         menuAccount.getItems().add(menuItemAccount[i]);
       }
 
-      // Initierar alla "sidor" med olika fält
+      // === Initierar varje "sida" ===
       for (i = 0; i < strButton.length; i++) {
-
-        labelPNo[i] = new Label("Personnummer: ");
-        tfPNo[i] = new TextField();
-
-        labelName[i] = new Label("Förnamn: ");
-        tfName[i] = new TextField();
-
-        labelSurname[i] = new Label("Efternamn: ");
-        tfSurname[i] = new TextField();
-
-        labelKontoNr[i] = new Label("Kontonr: ");
-        tfKontoNr[i] = new ListView<>(tfKontoList);
-
-        labelBelopp[i] = new Label("Belopp: ");
-        tfBelopp[i] = new TextField();
-
-        saveButton[i] = new Button(strButton[i]);
-
-        // Aktivera händelser efter inmatning på valda fält
-        final short index = i;
-        saveButton[i].setOnAction(_ -> bankMenuSave(index));
-        tfPNo[i].focusedProperty().addListener(_ -> bankAccountList(index));
-        tfBelopp[i].focusedProperty().addListener(_ -> bankBeloppCheck(index));
-        vbox[i] = new VBox(10);
-        vbox[i].getChildren().addAll(labelPNo[i], tfPNo[i]); // pNo finns på alla vbox, även button men den ska vara
-                                                             // sist.
-      }
-
-      // Initiering av vbox som innehåller olika element, har redan lite initierat
-
-      // Meny Kund kommandon
-      // Spara ny kund
-      vbox[0].getChildren().addAll(labelName[0], tfName[0], labelSurname[0], tfSurname[0]);
-
-      // Byt namn på en kund
-      vbox[2].getChildren().addAll(labelName[2], tfName[2], labelSurname[2], tfSurname[2]);
-
-      // Saldo
-      vbox[6].getChildren().addAll(labelKontoNr[6], tfKontoNr[6]);
-
-      // Sätta in
-      vbox[7].getChildren().addAll(labelKontoNr[7], tfKontoNr[7], labelBelopp[7], tfBelopp[7]);
-
-      // Ta ut
-      vbox[8].getChildren().addAll(labelKontoNr[8], tfKontoNr[8], labelBelopp[8], tfBelopp[8]);
-
-      // Transaktioner
-      vbox[9].getChildren().addAll(labelKontoNr[9], tfKontoNr[9]);
-
-      // Ta bort konto
-      vbox[10].getChildren().addAll(labelKontoNr[10], tfKontoNr[10]);
-
-      // Sätt saveButtons sist
-      for (i = 0; i < strButton.length; i++) {
-        vbox[i].getChildren().add(saveButton[i]);
+        switch (i) {
+        case 0, 2 -> initVBox(i, true, true, false, false); // Spara kund, Byt namn
+        case 6, 9, 10 -> initVBox(i, false, false, true, false); // Hämta saldo, Transaktioner, Ta bort konto
+        case 7, 8 -> initVBox(i, false, false, true, true); // Sätta in/ta ut
+        default -> initVBox(i, false, false, false, false); // Hämta kund, Ta bort kund, Skapa spar- och kredit-konton
+        }
       }
 
       imageVBox.getChildren().addAll(bagImageView, piggyImageView, safeImageView);
