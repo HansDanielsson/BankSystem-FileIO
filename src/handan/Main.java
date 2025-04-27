@@ -85,6 +85,7 @@ public class Main extends Application {
   private static ObservableList<String> tfResultList = FXCollections.observableArrayList();
 
   private static Label[] labelKontoNr = new Label[strButton.length];
+
   // Ignorerar varningen, det blir rätt kod ändå.
   @SuppressWarnings("unchecked")
   private static ListView<String>[] tfKontoNr = new ListView[strButton.length];
