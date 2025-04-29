@@ -304,6 +304,7 @@ public class Main extends Application {
    */
   private void createBankCustomer() {
     if (bank.createCustomer(tfName[0].getText(), tfSurname[0].getText(), tfPNo[0].getText())) {
+      getBankAllCustomers();
       setStatusOk(SAVED);
     } else {
       setStatusError(NOTSAVED);

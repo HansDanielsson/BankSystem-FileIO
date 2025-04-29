@@ -18,10 +18,10 @@ public class Customer implements Serializable {
   private static final long serialVersionUID = 611114L;
 
   // Privata variabler till kund.
-  private String customerName;
-  private String customerSurname;
+  private String firstName;
+  private String lastName;
   private String personalNumber;
-  private List<Account> accounts = null; // Lista med konton
+  private List<Account> accounts; // Lista med konton
 
   /**
    * Default konstruktor för en kund.
@@ -33,36 +33,36 @@ public class Customer implements Serializable {
   /**
    * Skapa en ny kund med f-namn, e-namn och pNo
    *
-   * @param theCustomerName
-   * @param theCustomerSurname
-   * @param thePersonalNumber
+   * @param firstName         Förnamn
+   * @param lastName          Efternamn
+   * @param thePersonalNumber Personnummer
    */
-  protected Customer(String theCustomerName, String theCustomerSurname, String thePersonalNumber) {
-    customerName = theCustomerName;
-    customerSurname = theCustomerSurname;
-    personalNumber = thePersonalNumber;
-    accounts = null;
+  protected Customer(String firstName, String lastName, String personalNumber) {
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.personalNumber = personalNumber;
+    this.accounts = new ArrayList<>();
   }
 
   /**
    * Ändrar på kunden. Endast tillåtet att ändra på sin egen post.
    *
-   * @param theName
-   * @param theSureName
-   * @return om något värde har ändrats
+   * @param newFirstName Nytt förnamn
+   * @param newLastName  Nytt efternamn
+   * @return true om något värde har ändrats
    */
-  protected boolean changeCustomerName(String theName, String theSureName) {
-    boolean result = false;
+  protected boolean changeCustomerName(String newFirstName, String newLastName) {
+    boolean updated = false;
     // Byter endast om det är någon information att byta till
-    if (!theName.isEmpty()) {
-      customerName = theName;
-      result = true;
+    if (newFirstName != null && !newFirstName.isBlank()) {
+      firstName = newFirstName;
+      updated = true;
     }
-    if (!theSureName.isEmpty()) {
-      customerSurname = theSureName;
-      result = true;
+    if (newLastName != null && !newLastName.isBlank()) {
+      lastName = newLastName;
+      updated = true;
     }
-    return result;
+    return updated;
   }
 
   /**
@@ -70,10 +70,7 @@ public class Customer implements Serializable {
    * bortagna
    */
   protected void deleteAccounts() {
-    if (accounts != null) {
-      accounts.clear();
-    }
-    accounts = null;
+    accounts.clear();
   }
 
   /**
@@ -94,15 +91,8 @@ public class Customer implements Serializable {
     return personalNumber;
   }
 
-  /**
-   * Rutin som sätter den privata pekaren för konton till en ny tom lista
-   */
-  protected void setAccounts() {
-    accounts = new ArrayList<>();
-  }
-
   @Override
   public String toString() {
-    return personalNumber + " " + customerName + " " + customerSurname;
+    return personalNumber + " " + firstName + " " + lastName;
   }
 }

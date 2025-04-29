@@ -8,6 +8,7 @@ package handan;
  * Importsatser
  */
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,15 +29,14 @@ public class BankLogic implements Serializable {
    * @param theAccountNumber , som söks upp
    * @return result , pekare till konto om det finns.
    */
-  private static Account getSearchAccount(List<Account> accounts, int theAccountNumber) {
-    if (accounts == null) {
-      return null;
-    }
-
-    return accounts.stream().filter(acc -> acc.getAccountNumber() == theAccountNumber).findFirst().orElse(null);
+  private static Account findAccount(List<Account> accounts, int accountId) {
+    return accounts.stream().filter(a -> a.getAccountNumber() == accountId).findFirst().orElse(null);
   }
 
-  private List<Customer> bankCustomer = new ArrayList<>();
+  /**
+   * customers kan inte vara static, ska sparas på fil
+   */
+  private List<Customer> customers = new ArrayList<>();
 
   /**
    * Rutin som byter namnet på en kund med pNo
@@ -47,16 +47,11 @@ public class BankLogic implements Serializable {
    * @return om bytet är utfört.
    */
   public boolean changeCustomerName(String name, String surname, String pNo) {
-    if ((name.isEmpty()) && (surname.isEmpty())) {
+    if ((name.isBlank()) && (surname.isBlank())) {
       return false;
     }
-
-    Customer changeCustomer = getSearchCustomer(pNo);
-    if (changeCustomer == null) {
-      return false;
-    }
-
-    return changeCustomer.changeCustomerName(name, surname);
+    Customer customer = findCustomer(pNo);
+    return customer != null && customer.changeCustomerName(name, surname);
   }
 
   /**
@@ -67,12 +62,12 @@ public class BankLogic implements Serializable {
    * @return "kontonr belopp kontotyp ränta"
    */
   public String closeAccount(String pNo, int accountId) {
-    Customer closeCustomer = getSearchCustomer(pNo);
+    Customer closeCustomer = findCustomer(pNo);
     if (closeCustomer == null) {
       return null;
     }
 
-    Account account = getSearchAccount(closeCustomer.getAccounts(), accountId);
+    Account account = findAccount(closeCustomer.getAccounts(), accountId);
     if (account == null) {
       return null;
     }
@@ -91,19 +86,15 @@ public class BankLogic implements Serializable {
    * @return -1 = Hittar inte pNo, annars kreditkontonummer
    */
   public int createCreditAccount(String pNo) {
-    Customer customer = getSearchCustomer(pNo);
+    Customer customer = findCustomer(pNo);
     if (customer == null) {
       return -1;
     }
 
-    if (customer.getAccounts() == null) {
-      customer.setAccounts();
-    }
+    Account account = new CreditAccount(0, 1.1, 5000, 5.0, true); // Här räknas kontonummer.
+    customer.getAccounts().add(account);
 
-    Account newAccount = new CreditAccount(0, 1.1, 5000, 5.0, true); // Här räknas kontonummer.
-    customer.getAccounts().add(newAccount);
-
-    return newAccount.getAccountNumber();
+    return account.getAccountNumber();
   }
 
   /**
@@ -116,11 +107,11 @@ public class BankLogic implements Serializable {
    */
   public boolean createCustomer(String name, String surname, String pNo) {
     // Kontroll att kunden inte finns redan.
-    if (getSearchCustomer(pNo) != null) {
+    if (findCustomer(pNo) != null) {
       return false;
     }
     // Ny kund till listan
-    return bankCustomer.add(new Customer(name, surname, pNo));
+    return customers.add(new Customer(name, surname, pNo));
   }
 
   /**
@@ -130,19 +121,15 @@ public class BankLogic implements Serializable {
    * @return -1 = Hittar inte pNo, annars kontonummer
    */
   public int createSavingsAccount(String pNo) {
-    Customer customer = getSearchCustomer(pNo);
+    Customer customer = findCustomer(pNo);
     if (customer == null) {
       return -1;
     }
 
-    if (customer.getAccounts() == null) {
-      customer.setAccounts();
-    }
+    Account account = new SavingsAccount(0, 2.4, 2.0, true); // Här räknas kontonummer.
+    customer.getAccounts().add(account);
 
-    Account newAccount = new SavingsAccount(0, 2.4, 2.0, true); // Här räknas kontonummer.
-    customer.getAccounts().add(newAccount);
-
-    return newAccount.getAccountNumber();
+    return account.getAccountNumber();
   }
 
   /**
@@ -153,27 +140,27 @@ public class BankLogic implements Serializable {
    * @return "pNr f-Namn E-namn, KontoNr Typ Saldo Kr,..."
    */
   public List<String> deleteCustomer(String pNo) {
-    Customer customer = getSearchCustomer(pNo);
+    Customer customer = findCustomer(pNo);
     if (customer == null) {
       return null;
     }
 
     // Skapa en ny lista med kundens data och konton
-    List<String> deList = new ArrayList<>();
-    deList.add(customer.toString());
+    List<String> result = new ArrayList<>();
+    result.add(customer.toString());
 
     List<Account> accounts = customer.getAccounts();
-    if (accounts != null && !accounts.isEmpty()) { // Kund har konton
+    if (!accounts.isEmpty()) { // Kund har konton
       for (Account account : accounts) {
-        deList.add(account.infoAccount() + " " + account.calculateInterest());
+        result.add(account.infoAccount() + " " + account.calculateInterest());
         // Ta bort Transaktionerna
         account.deleteTransactions();
       }
       // Ta bort kontot
       customer.deleteAccounts();
     }
-    bankCustomer.remove(customer);
-    return List.copyOf(deList);
+    customers.remove(customer);
+    return List.copyOf(result);
   }
 
   /**
@@ -189,13 +176,28 @@ public class BankLogic implements Serializable {
       return false;
     }
 
-    Customer customer = getSearchCustomer(pNo);
+    Customer customer = findCustomer(pNo);
     if (customer == null) {
       return false;
     }
 
-    Account account = getSearchAccount(customer.getAccounts(), accountId);
-    return account != null && account.deposit(amount);
+    Account account = findAccount(customer.getAccounts(), accountId);
+    return account != null && account.deposit(BigDecimal.valueOf(amount));
+  }
+
+  /**
+   * Hjälpmetod som letar reda på en kund med hjälp av pNr som är unikt. Kan inte
+   * vara static
+   *
+   * @param theSearchNo
+   * @return pekare till kundens post om den finns.
+   */
+  private Customer findCustomer(String pNo) {
+    if (pNo == null || pNo.isBlank()) {
+      return null;
+    }
+
+    return customers.stream().filter(c -> pNo.equals(c.getPersonalNumber())).findFirst().orElse(null);
   }
 
   /**
@@ -206,12 +208,12 @@ public class BankLogic implements Serializable {
    * @return om accountid = kundens konto
    */
   public String getAccount(String pNo, int accountId) {
-    Customer customer = getSearchCustomer(pNo);
+    Customer customer = findCustomer(pNo);
     if (customer == null) {
       return null;
     }
 
-    Account account = getSearchAccount(customer.getAccounts(), accountId);
+    Account account = findAccount(customer.getAccounts(), accountId);
     return account == null ? null : account.toString();
   }
 
@@ -222,13 +224,12 @@ public class BankLogic implements Serializable {
    * @return
    */
   public List<String> getAccountList(String pNo) {
-    Customer customer = getSearchCustomer(pNo);
-    if (customer == null || customer.getAccounts() == null) {
+    Customer customer = findCustomer(pNo);
+    if (customer == null) {
       return Collections.emptyList();
     }
 
-    return customer.getAccounts().stream().map(acc -> String.valueOf(acc.getAccountNumber()))
-        .collect(Collectors.toList());
+    return customer.getAccounts().stream().map(a -> String.valueOf(a.getAccountNumber())).collect(Collectors.toList());
   }
 
   /**
@@ -237,17 +238,17 @@ public class BankLogic implements Serializable {
    * @return , finns inga kunder blir den tom lista []
    */
   public List<String> getAllCustomers() {
-    return bankCustomer.stream().map(Customer::toString).collect(Collectors.toUnmodifiableList());
+    return customers.stream().map(Customer::toString).collect(Collectors.toUnmodifiableList());
   }
 
   /**
    * Rutin som returnerar alla kunder i orginal listan. Behövs för att kunna ta
    * bort allt i banken
    *
-   * @return , bankCustomer
+   * @return , customers
    */
   protected List<Customer> getAllCustomersList() {
-    return bankCustomer;
+    return customers;
   }
 
   /**
@@ -257,31 +258,13 @@ public class BankLogic implements Serializable {
    * @return lista på bortagna poster.
    */
   public List<String> getCustomer(String pNo) {
-    Customer customer = getSearchCustomer(pNo);
+    Customer customer = findCustomer(pNo);
     if (customer == null) {
       return null;
     }
 
-    return Stream
-        .concat(Stream.of(customer.toString()),
-            customer.getAccounts() == null ? Stream.empty() : customer.getAccounts().stream().map(Account::toString))
+    return Stream.concat(Stream.of(customer.toString()), customer.getAccounts().stream().map(Account::toString))
         .collect(Collectors.toUnmodifiableList());
-  }
-
-  /**
-   * Hjälpmetod som letar reda på en kund med hjälp av pNr som är unikt. Kan inte
-   * vara static
-   *
-   * @param theSearchNo
-   * @return pekare till kundens post om den finns.
-   */
-  private Customer getSearchCustomer(String theSearchNo) {
-    if (theSearchNo == null || theSearchNo.isEmpty()) {
-      return null;
-    }
-
-    return bankCustomer.stream().filter(customer -> theSearchNo.equals(customer.getPersonalNumber())).findFirst()
-        .orElse(null);
   }
 
   /**
@@ -292,12 +275,12 @@ public class BankLogic implements Serializable {
    * @return null or List<>
    */
   public List<String> getTransactions(String pNo, int accountId) {
-    Customer customer = getSearchCustomer(pNo);
+    Customer customer = findCustomer(pNo);
     if (customer == null) {
       return null;
     }
 
-    Account account = getSearchAccount(customer.getAccounts(), accountId);
+    Account account = findAccount(customer.getAccounts(), accountId);
     if (account == null) {
       return null;
     }
@@ -318,12 +301,12 @@ public class BankLogic implements Serializable {
       return false;
     }
 
-    Customer customer = getSearchCustomer(pNo);
+    Customer customer = findCustomer(pNo);
     if (customer == null) {
       return false;
     }
 
-    Account account = getSearchAccount(customer.getAccounts(), accountId);
+    Account account = findAccount(customer.getAccounts(), accountId);
     if (account == null) {
       return false;
     }

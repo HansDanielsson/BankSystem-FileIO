@@ -9,6 +9,7 @@ package handan;
  */
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -16,18 +17,36 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Abstrakt klass för bankkonto.
+ */
 public abstract class Account implements Serializable {
 
   /**
    * Versionshanterings variabel till deserialisering
    */
   private static final long serialVersionUID = 611114L;
+  private static final int START_ACCOUNT_NUMBER = 1000; // Startvärde för kontonummer
+  private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+  private static final Locale SWEDISH_LOCALE = Locale.forLanguageTag("sv-SE");
+  private static final String DEFAULT_ACCOUNT_NAME = "Sparkonto";
 
   /**
    * Variabel som är gemensam för alla konton
    */
-  private static int lastAssignedNumber = 1000;
-  private static String accountName = "Sparkonto";
+  private static int lastAssignedNumber = START_ACCOUNT_NUMBER; // Kontonummer
+
+  /**
+   * Protected hjälprutin till Number som byter "," till "." Underlättar vid
+   * kommande listor som är med avgränsare ,
+   *
+   * @param theValue
+   * @return Nu med punkt
+   */
+  protected static String formatCurrency(Number theValue) {
+    NumberFormat numberFormat = NumberFormat.getCurrencyInstance(SWEDISH_LOCALE);
+    return numberFormat.format(theValue).replace(',', '.');
+  }
 
   /**
    * Hjälprutin som hämtar senaste kontonummer
@@ -39,71 +58,28 @@ public abstract class Account implements Serializable {
   }
 
   /**
-   * Privat hjälprutin till BigDecimal som byter "," till "." Underlättar vid
-   * kommande listor som är med avgränsare ,
-   *
-   * @param str
-   * @return Nu med punkt
-   */
-  private static String makePointCurrency(BigDecimal theValue) {
-    String str = NumberFormat.getCurrencyInstance(Locale.of("SV", "SE")).format(theValue);
-    str = str.replace(',', '.');
-    return str;
-  }
-
-  /**
-   * Protected hjälprutin till double som byter "," till "." Underlättar vid
-   * kommande listor som är med avgränsare ,
-   *
-   * @param str
-   * @return Nu med punkt
-   */
-  protected static String makePointCurrency(double theValue) {
-    String str = NumberFormat.getCurrencyInstance(Locale.of("SV", "SE")).format(theValue);
-    str = str.replace(',', '.');
-    return str;
-  }
-
-  /**
-   * Protected hjälprutin till int som byter "," till "." Underlättar vid kommande
-   * listor som är med avgränsare ,
-   *
-   * @param str
-   * @return Nu med punkt
-   */
-  protected static String makePointCurrency(int theValue) {
-    String str = NumberFormat.getCurrencyInstance(Locale.of("SV", "SE")).format(theValue);
-    str = str.replace(',', '.');
-    return str;
-  }
-
-  /**
    * Hjälprutin som sätter senaste kontonummer
    *
    * @param theNumber
    */
-  protected static void setLastAssignedNumber(int theNumber) {
-    lastAssignedNumber = theNumber;
+  protected static void setLastAssignedNumber(int number) {
+    lastAssignedNumber = number;
   }
 
   /**
    * Variabler för enskilda konton
    */
-  private int accountNumber; // 1001, 1002, 1003, 1004 osv.
-
-  private String accountType;
-
+  private final int accountNumber; // 1001, 1002, 1003, 1004 osv.
+  private final String accountType;
   private BigDecimal balance;
-
-  private BigDecimal interestRate;
-
-  private List<String> transactions = null;
+  private final BigDecimal interestRate;
+  private final List<String> transactions;
 
   /**
    * Default Konstruktor för ett nytt bankkonto
    */
   protected Account() {
-    this(accountName, 0, 2.4, false);
+    this(DEFAULT_ACCOUNT_NAME, 0, 2.4, false);
   }
 
   /**
@@ -117,29 +93,27 @@ public abstract class Account implements Serializable {
   protected Account(String theAccountType, int theBalance, double theInterestRate, boolean addNumber) {
     if (addNumber) {
       lastAssignedNumber++; // Ska bara räknas upp med 1 ibland.
-      transactions = new ArrayList<>();
     }
-    accountNumber = lastAssignedNumber;
-    accountType = theAccountType;
-    balance = BigDecimal.valueOf(theBalance);
-    interestRate = BigDecimal.valueOf(theInterestRate);
+    this.accountNumber = lastAssignedNumber;
+    this.accountType = theAccountType;
+    this.balance = BigDecimal.valueOf(theBalance);
+    this.interestRate = BigDecimal.valueOf(theInterestRate);
+    this.transactions = new ArrayList<>();
   }
 
   /**
-   * Rutin som tar bort beloppet (theAmount) från saldo (balance) Använder
-   * BigDecimal
+   * Rutin som tar bort beloppet (amount) från saldo (balance)
    *
-   * @param theAmount
+   * @param amount
    * @return om det gick bra
    */
-  protected boolean balanceSubtract(int theAmount) {
-    try {
-      balance = balance.subtract(BigDecimal.valueOf(theAmount));
-      // Skapa transaktionen och spara den
-      makeTransaction(-theAmount);
-    } catch (Exception e) {
+  protected boolean balanceSubtract(BigDecimal amount) {
+    if (amount == null) {
       return false;
     }
+    balance = balance.subtract(amount);
+    // Skapa transaktionen och spara den
+    makeTransaction(amount.negate());
     return true;
   }
 
@@ -156,32 +130,28 @@ public abstract class Account implements Serializable {
    */
   protected void deleteTransactions() {
     // Tar bort alla transaktioner
-    if (transactions != null) {
-      transactions.clear();
-    }
-    transactions = null;
+    transactions.clear();
   }
 
   /**
-   * Rutin som sätter in beloppet (theAmount) till saldo (balance) Kontroll har
-   * redan utförts på theAmount > 0
+   * Rutin som sätter in beloppet (amount) till saldo (balance) Kontroll har redan
+   * utförts på amount > 0
    *
-   * @param theAmount
-   * @return true hela tiden för att theAmount > 0
+   * @param amount
+   * @return true hela tiden för att amount > 0
    */
-  protected boolean deposit(int theAmount) {
-    try {
-      balance = balance.add(BigDecimal.valueOf(theAmount));
-      // Skapa transaktion och spara den
-      makeTransaction(theAmount);
-    } catch (Exception e) {
+  protected boolean deposit(BigDecimal amount) {
+    if (amount == null) {
       return false;
     }
+    balance = balance.add(amount);
+    // Skapa transaktion och spara den
+    makeTransaction(amount);
     return true;
   }
 
-  protected int getAccountBalance() {
-    return balance.intValue();
+  protected BigDecimal getAccountBalance() {
+    return balance;
   }
 
   /**
@@ -207,8 +177,8 @@ public abstract class Account implements Serializable {
    *
    * @return double värdet
    */
-  protected double getInterestRate() {
-    return interestRate.doubleValue();
+  protected BigDecimal getInterestRate() {
+    return interestRate;
   }
 
   /**
@@ -217,7 +187,7 @@ public abstract class Account implements Serializable {
    * @return "kontonr saldo kontotyp <procent %>"
    */
   protected String infoAccount() {
-    return accountNumber + " " + makePointCurrency(balance) + " " + accountType;
+    return accountNumber + " " + formatCurrency(balance) + " " + accountType;
   }
 
   /**
@@ -227,12 +197,12 @@ public abstract class Account implements Serializable {
    * @param theInterestRate , Räntan som gäller till beloppet
    * @return
    */
-  protected String makeAccountInfo(double theInterestRate) {
+  protected String makeAccountInfo(BigDecimal rate) {
     NumberFormat percentFormat = NumberFormat.getPercentInstance(Locale.of("SV", "SE"));
     percentFormat.setMaximumFractionDigits(1); // Anger att vi vill ha max 1 decimal
-    String strPercent = percentFormat.format(theInterestRate / 100.0);
-    strPercent = strPercent.replace(',', '.'); // Men decimal punkt
-    return accountNumber + " " + makePointCurrency(balance) + " " + accountType + " " + strPercent;
+    String strPercent = percentFormat.format(rate.divide(BigDecimal.valueOf(100.0), 2, RoundingMode.HALF_UP))
+        .replace(',', '.');
+    return accountNumber + " " + formatCurrency(balance) + " " + accountType + " " + strPercent;
   }
 
   /**
@@ -242,14 +212,9 @@ public abstract class Account implements Serializable {
    *
    * @param theAmount
    */
-  private void makeTransaction(int theAmount) {
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    LocalDateTime date = LocalDateTime.now();
-    String strDate = date.format(formatter);
-    String strBalance = makePointCurrency(balance);
-    String strAmount = makePointCurrency(theAmount);
-
-    String oneTransaction = strDate + " " + strAmount + " Saldo: " + strBalance;
+  private void makeTransaction(BigDecimal amount) {
+    String oneTransaction = String.format("%s %s Saldo: %s", DATE_FORMAT.format(LocalDateTime.now()),
+        formatCurrency(amount), formatCurrency(balance));
     transactions.add(oneTransaction);
   }
 
@@ -260,7 +225,7 @@ public abstract class Account implements Serializable {
    */
   @Override
   public String toString() {
-    return makeAccountInfo(interestRate.doubleValue());
+    return makeAccountInfo(interestRate);
   }
 
   /**

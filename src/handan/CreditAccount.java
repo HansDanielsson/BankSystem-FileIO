@@ -9,6 +9,8 @@ package handan;
  * Importsatser
  */
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class CreditAccount extends Account implements Serializable {
 
@@ -18,8 +20,8 @@ public class CreditAccount extends Account implements Serializable {
   private static final long serialVersionUID = 611114L;
 
   // Variabler för enskilt kreditkonto
-  private int creditLimit; // Kreditgräns (5000 kr)
-  private double deptInterest; // Skuldränta 5% om saldo < 0.
+  private final BigDecimal creditLimit; // Max kredit, t.ex. -5000 kr
+  private final BigDecimal debtInterest; // Skuldränta, t.ex. 5%
 
   protected CreditAccount() {
     this(0, 1.1, 5000, 5.0, false);
@@ -28,57 +30,56 @@ public class CreditAccount extends Account implements Serializable {
   /**
    * Skapa ett Kreditkonto
    *
-   * @param theBalance      , Startkapital
-   * @param theInterestRate , Räntan 1.1% på insatta pengar > 0
-   * @param theCreditLimit  , Kreditgräns på 5000, kan ta ut pengar till belopp
+   * @param initialBalance  Startsaldo
+   * @param theInterestRate Räntan 1.1% på insatta pengar > 0
+   * @param theCreditLimit  Kreditgräns på 5000, kan ta ut pengar till belopp
    *                        -5000 kr
-   * @param theDeptInterest , Skuldränta 5% om saldo < 0
-   * @param addNumber       , Öka kontonummer med 1
+   * @param theDeptInterest Skuldränta 5% om saldo < 0
+   * @param addNumber       Öka kontonummer med 1
    */
-  protected CreditAccount(int theBalance, double theInterestRate, int theCreditLimit, double theDeptInterest,
+  protected CreditAccount(int initialBalance, double interestRate, int creditLimit, double debtInterest,
       boolean addNumber) {
-    super("Kreditkonto", theBalance, theInterestRate, addNumber);
-    creditLimit = theCreditLimit;
-    deptInterest = theDeptInterest;
+    super("Kreditkonto", initialBalance, interestRate, addNumber);
+    this.creditLimit = BigDecimal.valueOf(creditLimit);
+    this.debtInterest = BigDecimal.valueOf(debtInterest);
   }
 
   /**
    * Rutin som beräknar räntan på Kredit-konto Olika beroende på saldo beloppet
    *
-   * @return x xxx kr
+   * @return Räntan i formaterad valuta
    */
   @Override
   protected String calculateInterest() {
-    int balance = getAccountBalance();
-    double interestRate = balance > 0 ? getInterestRate() : deptInterest;
-    double numberInterest = balance * interestRate / 100.0;
-    return makePointCurrency(numberInterest);
+    BigDecimal balance = getAccountBalance();
+    BigDecimal rate = balance.signum() >= 0 ? getInterestRate() : debtInterest;
+    BigDecimal interest = balance.multiply(rate).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+    return formatCurrency(interest);
   }
 
   @Override
   public String toString() {
-    int balanceValue = getAccountBalance();
-    if (balanceValue < 0) {
-      return makeAccountInfo(deptInterest);
-    }
-    return super.toString();
+    BigDecimal rate = getAccountBalance().signum() >= 0 ? getInterestRate() : debtInterest;
+    return makeAccountInfo(rate);
   }
 
   /**
-   * Rutin som tar bort beloppet (amount) från saldo (balance) belopet ska vara >
-   * 0 och att beloppet är lägst creditLimit
+   * Uttag med kontroll av kreditgräns. Tillåter saldo ner till -creditLimit
    *
-   * @param theAmount
-   * @return om beloppet har minskat saldo
+   * @param amount Belopp att ta ut (måste vara > 0)
+   * @return true om uttaget kunde göras
    */
   @Override
-  protected boolean withdraw(int theAmount) {
+  protected boolean withdraw(int amount) {
     // Tidig return om beloppet är negativt
-    if (theAmount <= 0) {
+    if (amount <= 0) {
       return false;
     }
 
-    // Ta bort theAmount från balance, min -creditLimit
-    return (getAccountBalance() - theAmount + creditLimit >= 0) && balanceSubtract(theAmount);
+    BigDecimal withdrawal = BigDecimal.valueOf(amount);
+    BigDecimal newBalance = getAccountBalance().subtract(withdrawal);
+
+    // Kontrollerar att nya saldot inte underskrider kreditgränsen
+    return newBalance.compareTo(creditLimit.negate()) >= 0 && balanceSubtract(withdrawal);
   }
 }
