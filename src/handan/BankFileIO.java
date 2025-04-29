@@ -169,7 +169,7 @@ public class BankFileIO {
   }
 
   /**
-   * Hjälprutin som visar en dialogruta med textinnehåll.
+   * Hjälprutin som visar en modal dialogruta med textinnehåll.
    *
    * @param title   Titel på dialogrutan
    * @param header  Rubrik på dialogrutan
