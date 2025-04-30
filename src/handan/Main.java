@@ -112,10 +112,10 @@ public class Main extends Application {
    * @param index - Beloppet som ska kollas upp
    */
   private static void bankBeloppCheck(short index) {
-    String str = tfBelopp[index].getText();
-    int dotPos = str.indexOf("."); // Ta bort allt efter .
-    int commaPos = str.indexOf(","); // Ta bort allt efter ,
-    int cutPos = (dotPos == -1) ? commaPos : (commaPos == -1 ? dotPos : Math.min(dotPos, commaPos));
+    var str = tfBelopp[index].getText();
+    var dotPos = str.indexOf("."); // Ta bort allt efter .
+    var commaPos = str.indexOf(","); // Ta bort allt efter ,
+    var cutPos = (dotPos == -1) ? commaPos : (commaPos == -1 ? dotPos : Math.min(dotPos, commaPos));
 
     if (cutPos > -1) {
       str = str.substring(0, cutPos);
@@ -276,7 +276,7 @@ public class Main extends Application {
     String strKonto = tfKontoNr[10].getSelectionModel().getSelectedItem();
     try {
       if (!strKonto.isBlank()) {
-        String str = bank.closeAccount(tfPNo[10].getText(), Integer.parseInt(strKonto));
+        var str = bank.closeAccount(tfPNo[10].getText(), Integer.parseInt(strKonto));
         if (str != null) {
           putCenterText(List.of(str));
         }
@@ -291,7 +291,7 @@ public class Main extends Application {
    * Rutin som skapar ett kreditkonto för person(pNo)
    */
   private void createBankCreditAccount() {
-    int accountId = bank.createCreditAccount(tfPNo[5].getText());
+    var accountId = bank.createCreditAccount(tfPNo[5].getText());
     if (accountId > 0) {
       putCenterText(List.of("Kontonummer: " + accountId));
     } else {
@@ -315,7 +315,7 @@ public class Main extends Application {
    * Rutin som skapar ett sparkonto för kund pNr
    */
   private void createBankSavingAccount() {
-    int accountId = bank.createSavingsAccount(tfPNo[4].getText());
+    var accountId = bank.createSavingsAccount(tfPNo[4].getText());
     if (accountId > 0) {
       putCenterText(List.of("Kontonummer: " + accountId));
     } else {
@@ -327,7 +327,7 @@ public class Main extends Application {
    * Rutin som tar bort en kund(pNo)
    */
   private void deletBankCustomer() {
-    List<String> result = bank.deleteCustomer(tfPNo[3].getText());
+    var result = bank.deleteCustomer(tfPNo[3].getText());
     if (result != null) {
       putCenterText(result);
     }
@@ -337,8 +337,8 @@ public class Main extends Application {
    * Rutin som sätter in pengar på ett konto
    */
   private void depositBankAccount() {
-    String strKonto = tfKontoNr[7].getSelectionModel().getSelectedItem();
-    String strBelopp = tfBelopp[7].getText();
+    var strKonto = tfKontoNr[7].getSelectionModel().getSelectedItem();
+    var strBelopp = tfBelopp[7].getText();
     try {
       if (bank.deposit(tfPNo[7].getText(), Integer.parseInt(strKonto), Integer.parseInt(strBelopp))) {
         setStatusOk(SAVED);
@@ -354,10 +354,10 @@ public class Main extends Application {
    * Rutin som hämtar saldo för ett konto
    */
   private void getBankAccount() {
-    String strKonto = tfKontoNr[6].getSelectionModel().getSelectedItem();
+    var strKonto = tfKontoNr[6].getSelectionModel().getSelectedItem();
     try {
       if (!strKonto.isBlank()) {
-        String str = bank.getAccount(tfPNo[6].getText(), Integer.parseInt(strKonto));
+        var str = bank.getAccount(tfPNo[6].getText(), Integer.parseInt(strKonto));
         if (str != null) {
           putCenterText(List.of(str));
         }
@@ -371,7 +371,7 @@ public class Main extends Application {
    * Rutin som hämtar alla kunder och visar det i fönster Center
    */
   private void getBankAllCustomers() {
-    List<String> result = bank.getAllCustomers();
+    var result = bank.getAllCustomers();
     if (result != null) {
       putCenterText(result);
     }
@@ -381,7 +381,7 @@ public class Main extends Application {
    * Rutin som tar fram en kund med konton
    */
   private void getBankCustomer() {
-    List<String> result = bank.getCustomer(tfPNo[1].getText());
+    var result = bank.getCustomer(tfPNo[1].getText());
     if (result != null) {
       putCenterText(result);
     }
@@ -391,18 +391,17 @@ public class Main extends Application {
    * Rutin som hämtar alla transaktioner för ett konto
    */
   private void getBankTransactions() {
-    String strKonto = tfKontoNr[9].getSelectionModel().getSelectedItem();
+    var strKonto = tfKontoNr[9].getSelectionModel().getSelectedItem();
     if (strKonto != null && !strKonto.isBlank()) {
       try {
-        int kontoNummer = Integer.parseInt(strKonto);
-        List<String> result = bank.getTransactions(tfPNo[9].getText(), kontoNummer);
+        var kontoNummer = Integer.parseInt(strKonto);
+        var result = bank.getTransactions(tfPNo[9].getText(), kontoNummer);
 
         if (result != null && !result.isEmpty()) {
-          List<String> newResult = Stream.concat(Stream.of("Transaktioner för konto: " + strKonto), result.stream())
-              .toList();
+          var newResult = Stream.concat(Stream.of("Transaktioner för konto: " + strKonto), result.stream()).toList();
 
           if (saveToFile) {
-            String strFile = BankFileIO.putFileTransactions(newResult);
+            var strFile = BankFileIO.putFileTransactions(newResult);
             if (strFile.startsWith("Sparad")) {
               setStatusOk(strFile);
             } else {
@@ -484,7 +483,7 @@ public class Main extends Application {
       return;
     }
 
-    BankLogic newBank = BankFileIO.getFileBank();
+    var newBank = BankFileIO.getFileBank();
     if (newBank != null) {
       clearCurrentBank(); // Rensa banken
       bank = newBank;
@@ -510,7 +509,7 @@ public class Main extends Application {
       setStatusError("Inga kunder i banken");
       return;
     }
-    String strFile = BankFileIO.putFileBank(bank);
+    var strFile = BankFileIO.putFileBank(bank);
     if (strFile.startsWith("Sparad")) {
       setStatusOk(strFile);
     } else {
@@ -580,7 +579,7 @@ public class Main extends Application {
 
       // Skapar upp en scene med borderPane, bredd, höjd samt bakgrundsfärg som
       // argument
-      Scene scene = new Scene(borderPane, 1400, 600, Color.LIGHTGREY);
+      var scene = new Scene(borderPane, 1400, 600, Color.LIGHTGREY);
       scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 
       // Lägger in Scene i Stage
@@ -598,8 +597,8 @@ public class Main extends Application {
    */
   private void withdrawBankAccount() {
     try {
-      int accountId = Integer.parseInt(tfKontoNr[8].getSelectionModel().getSelectedItem());
-      int amount = Integer.parseInt(tfBelopp[8].getText());
+      var accountId = Integer.parseInt(tfKontoNr[8].getSelectionModel().getSelectedItem());
+      var amount = Integer.parseInt(tfBelopp[8].getText());
       if (bank.withdraw(tfPNo[8].getText(), accountId, amount)) {
         setStatusOk(SAVED);
       } else {

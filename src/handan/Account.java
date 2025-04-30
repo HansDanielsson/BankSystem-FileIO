@@ -40,12 +40,12 @@ public abstract class Account implements Serializable {
    * Protected hjälprutin till Number som byter "," till "." Underlättar vid
    * kommande listor som är med avgränsare ,
    *
-   * @param theValue
+   * @param value
    * @return Nu med punkt
    */
-  protected static String formatCurrency(Number theValue) {
-    NumberFormat numberFormat = NumberFormat.getCurrencyInstance(SWEDISH_LOCALE);
-    return numberFormat.format(theValue).replace(',', '.');
+  protected static String formatCurrency(Number value) {
+    var numberFormat = NumberFormat.getCurrencyInstance(SWEDISH_LOCALE);
+    return numberFormat.format(value).replace(',', '.');
   }
 
   /**
@@ -60,7 +60,7 @@ public abstract class Account implements Serializable {
   /**
    * Hjälprutin som sätter senaste kontonummer
    *
-   * @param theNumber
+   * @param number
    */
   protected static void setLastAssignedNumber(int number) {
     lastAssignedNumber = number;
@@ -85,19 +85,19 @@ public abstract class Account implements Serializable {
   /**
    * Konstruktor för nytt bankkonto
    *
-   * @param theAccountType  , Sparkonto eller Kreditkonto
-   * @param theBalance      , start belopp
-   * @param theInterestRate , 2.4% eller 1.1% på insatta pengar
+   * @param accountType  , Sparkonto eller Kreditkonto
+   * @param balance      , start belopp
+   * @param interestRate , 2.4% eller 1.1% på insatta pengar
    * @param addNumber
    */
-  protected Account(String theAccountType, int theBalance, double theInterestRate, boolean addNumber) {
+  protected Account(String accountType, int balance, double interestRate, boolean addNumber) {
     if (addNumber) {
       lastAssignedNumber++; // Ska bara räknas upp med 1 ibland.
     }
     this.accountNumber = lastAssignedNumber;
-    this.accountType = theAccountType;
-    this.balance = BigDecimal.valueOf(theBalance);
-    this.interestRate = BigDecimal.valueOf(theInterestRate);
+    this.accountType = accountType;
+    this.balance = BigDecimal.valueOf(balance);
+    this.interestRate = BigDecimal.valueOf(interestRate);
     this.transactions = new ArrayList<>();
   }
 
@@ -108,28 +108,20 @@ public abstract class Account implements Serializable {
    * @return om det gick bra
    */
   protected boolean balanceSubtract(BigDecimal amount) {
-    if (amount == null) {
-      return false;
-    }
-    balance = balance.subtract(amount);
-    // Skapa transaktionen och spara den
-    makeTransaction(amount.negate());
-    return true;
+    return updateBalance(amount.negate());
   }
 
   /**
-   * Rutin som beräknar räntan beroende om Spar- eller Kredit-konto Är abstrakt
-   * och definieras senare
+   * Abstrakt metod för att beräkna räntan, implementeras i subklasserna.
    *
    * @return x xxx kr
    */
   protected abstract String calculateInterest();
 
   /**
-   * Rutin som tar bort dess transaktioner
+   * Rutin för att tömma transaktionshistoriken.
    */
   protected void deleteTransactions() {
-    // Tar bort alla transaktioner
     transactions.clear();
   }
 
@@ -141,13 +133,7 @@ public abstract class Account implements Serializable {
    * @return true hela tiden för att amount > 0
    */
   protected boolean deposit(BigDecimal amount) {
-    if (amount == null) {
-      return false;
-    }
-    balance = balance.add(amount);
-    // Skapa transaktion och spara den
-    makeTransaction(amount);
-    return true;
+    return updateBalance(amount);
   }
 
   protected BigDecimal getAccountBalance() {
@@ -187,33 +173,32 @@ public abstract class Account implements Serializable {
    * @return "kontonr saldo kontotyp <procent %>"
    */
   protected String infoAccount() {
-    return accountNumber + " " + formatCurrency(balance) + " " + accountType;
+    return String.format("%d %s %s", accountNumber, formatCurrency(balance), accountType);
   }
 
   /**
    * Rutin som räknar ut räntan på kontot Räntan är olika beroende på belopp och
    * kontotyp.
    *
-   * @param theInterestRate , Räntan som gäller till beloppet
+   * @param rate , Räntan som gäller till beloppet
    * @return
    */
   protected String makeAccountInfo(BigDecimal rate) {
-    NumberFormat percentFormat = NumberFormat.getPercentInstance(Locale.of("SV", "SE"));
+    var percentFormat = NumberFormat.getPercentInstance(SWEDISH_LOCALE);
     percentFormat.setMaximumFractionDigits(1); // Anger att vi vill ha max 1 decimal
-    String strPercent = percentFormat.format(rate.divide(BigDecimal.valueOf(100.0), 2, RoundingMode.HALF_UP))
-        .replace(',', '.');
-    return accountNumber + " " + formatCurrency(balance) + " " + accountType + " " + strPercent;
+    var strPercent = percentFormat.format(rate.divide(BigDecimal.valueOf(100.0), 2, RoundingMode.HALF_UP)).replace(',',
+        '.');
+    return String.format("%d %s %s %s", accountNumber, formatCurrency(balance), accountType, strPercent);
   }
 
   /**
-   * Hjälpmetod att skapa en transaktion, gäller både för spar- och kredit-konto
-   * Skapa texten yyyy-MM-dd HH:mm:ss -500.00 kr Saldo: -500.00 kr, Lägg till det
-   * i transaktionslistan
+   * Privatrutin för att registrera en transaktion med datum, föndrat belopp och
+   * nytt saldo.
    *
-   * @param theAmount
+   * @param amount
    */
   private void makeTransaction(BigDecimal amount) {
-    String oneTransaction = String.format("%s %s Saldo: %s", DATE_FORMAT.format(LocalDateTime.now()),
+    var oneTransaction = String.format("%s %s Saldo: %s", DATE_FORMAT.format(LocalDateTime.now()),
         formatCurrency(amount), formatCurrency(balance));
     transactions.add(oneTransaction);
   }
@@ -229,12 +214,22 @@ public abstract class Account implements Serializable {
   }
 
   /**
-   * Rutin som tar bort beloppet (amount) från saldo (balance) belopet ska vara >
-   * 0 och att beloppet finns på saldo Det är olika beräkningar beroende på spar-
-   * eller kredit-konto därför ör rutinen abstrakt och den skapas senare.
+   * Privat hjälprutin för att uppdatera saldot och registrera transaktionen.
    *
-   * @param theAmount
-   * @return om beloppet har minskat saldo
+   * @param change
+   * @return true om det gick bra
    */
-  protected abstract boolean withdraw(int theAmount);
+  private boolean updateBalance(BigDecimal change) {
+    if (change == null) {
+      return false;
+    }
+    balance = balance.add(change);
+    makeTransaction(change);
+    return true;
+  }
+
+  /**
+   * Abstrakt metod för uttag, implementeras i subklasserna.
+   */
+  protected abstract boolean withdraw(int amount);
 }

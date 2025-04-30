@@ -45,14 +45,14 @@ public class Customer implements Serializable {
   }
 
   /**
-   * Ändrar på kunden. Endast tillåtet att ändra på sin egen post.
+   * Ändrar på kunden.
    *
    * @param newFirstName Nytt förnamn
    * @param newLastName  Nytt efternamn
    * @return true om något värde har ändrats
    */
   protected boolean changeCustomerName(String newFirstName, String newLastName) {
-    boolean updated = false;
+    var updated = false;
     // Byter endast om det är någon information att byta till
     if (newFirstName != null && !newFirstName.isBlank()) {
       firstName = newFirstName;
@@ -93,6 +93,6 @@ public class Customer implements Serializable {
 
   @Override
   public String toString() {
-    return personalNumber + " " + firstName + " " + lastName;
+    return String.format("%s %s %s", personalNumber, firstName, lastName);
   }
 }

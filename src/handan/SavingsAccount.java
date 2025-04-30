@@ -6,14 +6,10 @@
  */
 package handan;
 
-/**
- * Importsatser
- */
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-public class SavingsAccount extends Account implements Serializable {
+public class SavingsAccount extends Account {
 
   /**
    * Versionshanterings variabel till deserialisering
@@ -48,7 +44,7 @@ public class SavingsAccount extends Account implements Serializable {
    */
   @Override
   protected String calculateInterest() {
-    BigDecimal interest = getAccountBalance().multiply(getInterestRate()).divide(BigDecimal.valueOf(100), 2,
+    var interest = getAccountBalance().multiply(getInterestRate()).divide(BigDecimal.valueOf(100), 2,
         RoundingMode.HALF_UP);
     return formatCurrency(interest);
   }
@@ -67,11 +63,11 @@ public class SavingsAccount extends Account implements Serializable {
       return false;
     }
 
-    BigDecimal withdrawal = BigDecimal.valueOf(amount);
+    var withdrawal = BigDecimal.valueOf(amount);
 
     // Justera beloppet efter första uttaget
     if (hasMadeWithdrawal) {
-      BigDecimal fee = withdrawal.multiply(withdrawRate).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+      var fee = withdrawal.multiply(withdrawRate).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
       withdrawal = withdrawal.add(fee);
     }
 

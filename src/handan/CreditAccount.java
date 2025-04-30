@@ -5,14 +5,10 @@
  */
 package handan;
 
-/**
- * Importsatser
- */
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-public class CreditAccount extends Account implements Serializable {
+public class CreditAccount extends Account {
 
   /**
    * Versionshanterings variabel till deserialisering
@@ -51,15 +47,15 @@ public class CreditAccount extends Account implements Serializable {
    */
   @Override
   protected String calculateInterest() {
-    BigDecimal balance = getAccountBalance();
-    BigDecimal rate = balance.signum() >= 0 ? getInterestRate() : debtInterest;
-    BigDecimal interest = balance.multiply(rate).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+    var balance = getAccountBalance();
+    var rate = balance.signum() >= 0 ? getInterestRate() : debtInterest;
+    var interest = balance.multiply(rate).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
     return formatCurrency(interest);
   }
 
   @Override
   public String toString() {
-    BigDecimal rate = getAccountBalance().signum() >= 0 ? getInterestRate() : debtInterest;
+    var rate = getAccountBalance().signum() >= 0 ? getInterestRate() : debtInterest;
     return makeAccountInfo(rate);
   }
 
@@ -76,8 +72,8 @@ public class CreditAccount extends Account implements Serializable {
       return false;
     }
 
-    BigDecimal withdrawal = BigDecimal.valueOf(amount);
-    BigDecimal newBalance = getAccountBalance().subtract(withdrawal);
+    var withdrawal = BigDecimal.valueOf(amount);
+    var newBalance = getAccountBalance().subtract(withdrawal);
 
     // Kontrollerar att nya saldot inte underskrider kreditgränsen
     return newBalance.compareTo(creditLimit.negate()) >= 0 && balanceSubtract(withdrawal);

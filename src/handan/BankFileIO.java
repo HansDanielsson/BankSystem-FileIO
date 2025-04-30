@@ -40,7 +40,7 @@ public class BankFileIO {
    * radera banken.
    */
   protected static boolean alertBankErase() {
-    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+    var alert = new Alert(Alert.AlertType.CONFIRMATION);
     alert.setTitle("Öppna bankfil");
     alert.setHeaderText("Vill du läsa in en ny bankfil?");
     alert.setContentText("Detta kommer att radera alla nuvarande kunder. Åtgärden kan inte ångras.");
@@ -75,7 +75,7 @@ public class BankFileIO {
       return null;
     }
 
-    try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
+    try (var in = new ObjectInputStream(new FileInputStream(file))) {
       // Läs in kontonummer
       Account.setLastAssignedNumber(in.readInt());
       // Läs in bank objektet
@@ -93,13 +93,13 @@ public class BankFileIO {
    * @return true om det inte går att läsa in filen
    */
   protected static boolean getFileTransactions() {
-    File file = openFile("*.txt");
+    var file = openFile("*.txt");
     if (file == null) {
       return false;
     }
 
-    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-      String content = br.lines().collect(Collectors.joining(System.lineSeparator()));
+    try (var br = new BufferedReader(new FileReader(file))) {
+      var content = br.lines().collect(Collectors.joining(System.lineSeparator()));
       showTextInDialog("Transaktioner", "Innehåll i filen: " + file.getName(), content);
       return false;
     } catch (IOException e) {
@@ -114,12 +114,12 @@ public class BankFileIO {
    * @return Den valda filen
    */
   private static File openFile(String filter) {
-    FileChooser fileChooser = new FileChooser();
+    var fileChooser = new FileChooser();
     fileChooser.setTitle("Öppna bankfil");
     fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Bankfiler", filter));
 
     // Sätt startkatalogen
-    File initialDir = new File(BASE_PATH);
+    var initialDir = new File(BASE_PATH);
     fileChooser.setInitialDirectory(initialDir.exists() ? initialDir : new File(System.getProperty("user.home")));
 
     return fileChooser.showOpenDialog(new Stage());
@@ -129,9 +129,9 @@ public class BankFileIO {
    * Hjälprutin som sparar bank objektet till en fil
    */
   protected static String putFileBank(BankLogic bank) {
-    String path = createUniqueFileName("bank-", ".dat");
+    var path = createUniqueFileName("bank-", ".dat");
 
-    try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(path))) {
+    try (var oos = new ObjectOutputStream(new FileOutputStream(path))) {
       // Spara kontonummer
       oos.writeInt(Account.getLastAssignedNumber());
       // Spara bank objektet
@@ -150,13 +150,13 @@ public class BankFileIO {
    * @param result - Transaktionerna
    */
   protected static String putFileTransactions(List<String> transactions) {
-    String path = createUniqueFileName("bank-", ".txt");
+    var path = createUniqueFileName("bank-", ".txt");
 
-    try (FileWriter fileWriter = new FileWriter(path, true)) {
+    try (var fileWriter = new FileWriter(path, true)) {
       fileWriter.write("Datum: " + sdf.format(new Date()).split("-")[0] + System.lineSeparator());
       fileWriter.write("====================================" + System.lineSeparator());
 
-      for (String str : transactions) {
+      for (var str : transactions) {
         fileWriter.write(str + System.lineSeparator());
       }
 
@@ -178,14 +178,14 @@ public class BankFileIO {
   private static void showTextInDialog(String title, String header, String content) {
 
     // Skapa en TextArea för visning
-    TextArea textArea = new TextArea(content);
+    var textArea = new TextArea(content);
     textArea.setEditable(false);
     textArea.setWrapText(true);
     textArea.setMaxWidth(600);
     textArea.setMaxHeight(400);
 
     // Visa i alert-dialog
-    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+    var alert = new Alert(Alert.AlertType.INFORMATION);
     alert.setTitle(title);
     alert.setHeaderText(header);
     alert.getDialogPane().setContent(textArea);

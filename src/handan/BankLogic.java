@@ -50,7 +50,7 @@ public class BankLogic implements Serializable {
     if ((name.isBlank()) && (surname.isBlank())) {
       return false;
     }
-    Customer customer = findCustomer(pNo);
+    var customer = findCustomer(pNo);
     return customer != null && customer.changeCustomerName(name, surname);
   }
 
@@ -62,17 +62,17 @@ public class BankLogic implements Serializable {
    * @return "kontonr belopp kontotyp ränta"
    */
   public String closeAccount(String pNo, int accountId) {
-    Customer closeCustomer = findCustomer(pNo);
+    var closeCustomer = findCustomer(pNo);
     if (closeCustomer == null) {
       return null;
     }
 
-    Account account = findAccount(closeCustomer.getAccounts(), accountId);
+    var account = findAccount(closeCustomer.getAccounts(), accountId);
     if (account == null) {
       return null;
     }
 
-    String result = account.infoAccount() + " " + account.calculateInterest();
+    var result = account.infoAccount() + " " + account.calculateInterest();
     // Ta bort Transaktionerna
     account.deleteTransactions();
     closeCustomer.getAccounts().remove(account);
@@ -86,12 +86,12 @@ public class BankLogic implements Serializable {
    * @return -1 = Hittar inte pNo, annars kreditkontonummer
    */
   public int createCreditAccount(String pNo) {
-    Customer customer = findCustomer(pNo);
+    var customer = findCustomer(pNo);
     if (customer == null) {
       return -1;
     }
 
-    Account account = new CreditAccount(0, 1.1, 5000, 5.0, true); // Här räknas kontonummer.
+    var account = new CreditAccount(0, 1.1, 5000, 5.0, true); // Här räknas kontonummer.
     customer.getAccounts().add(account);
 
     return account.getAccountNumber();
@@ -118,15 +118,15 @@ public class BankLogic implements Serializable {
    * Skapar ett konto för person pNo
    *
    * @param pNo
-   * @return -1 = Hittar inte pNo, annars kontonummer
+   * @return kontonummer om kunden hittas, annars -1
    */
   public int createSavingsAccount(String pNo) {
-    Customer customer = findCustomer(pNo);
+    var customer = findCustomer(pNo);
     if (customer == null) {
       return -1;
     }
 
-    Account account = new SavingsAccount(0, 2.4, 2.0, true); // Här räknas kontonummer.
+    var account = new SavingsAccount(0, 2.4, 2.0, true); // Här räknas kontonummer.
     customer.getAccounts().add(account);
 
     return account.getAccountNumber();
@@ -140,7 +140,7 @@ public class BankLogic implements Serializable {
    * @return "pNr f-Namn E-namn, KontoNr Typ Saldo Kr,..."
    */
   public List<String> deleteCustomer(String pNo) {
-    Customer customer = findCustomer(pNo);
+    var customer = findCustomer(pNo);
     if (customer == null) {
       return null;
     }
@@ -149,13 +149,13 @@ public class BankLogic implements Serializable {
     List<String> result = new ArrayList<>();
     result.add(customer.toString());
 
-    List<Account> accounts = customer.getAccounts();
+    var accounts = customer.getAccounts();
     if (!accounts.isEmpty()) { // Kund har konton
-      for (Account account : accounts) {
+      accounts.forEach(account -> {
         result.add(account.infoAccount() + " " + account.calculateInterest());
         // Ta bort Transaktionerna
         account.deleteTransactions();
-      }
+      });
       // Ta bort kontot
       customer.deleteAccounts();
     }
@@ -176,12 +176,12 @@ public class BankLogic implements Serializable {
       return false;
     }
 
-    Customer customer = findCustomer(pNo);
+    var customer = findCustomer(pNo);
     if (customer == null) {
       return false;
     }
 
-    Account account = findAccount(customer.getAccounts(), accountId);
+    var account = findAccount(customer.getAccounts(), accountId);
     return account != null && account.deposit(BigDecimal.valueOf(amount));
   }
 
@@ -208,12 +208,12 @@ public class BankLogic implements Serializable {
    * @return om accountid = kundens konto
    */
   public String getAccount(String pNo, int accountId) {
-    Customer customer = findCustomer(pNo);
+    var customer = findCustomer(pNo);
     if (customer == null) {
       return null;
     }
 
-    Account account = findAccount(customer.getAccounts(), accountId);
+    var account = findAccount(customer.getAccounts(), accountId);
     return account == null ? null : account.toString();
   }
 
@@ -224,7 +224,7 @@ public class BankLogic implements Serializable {
    * @return
    */
   public List<String> getAccountList(String pNo) {
-    Customer customer = findCustomer(pNo);
+    var customer = findCustomer(pNo);
     if (customer == null) {
       return Collections.emptyList();
     }
@@ -258,7 +258,7 @@ public class BankLogic implements Serializable {
    * @return lista på bortagna poster.
    */
   public List<String> getCustomer(String pNo) {
-    Customer customer = findCustomer(pNo);
+    var customer = findCustomer(pNo);
     if (customer == null) {
       return null;
     }
@@ -275,12 +275,12 @@ public class BankLogic implements Serializable {
    * @return null or List<>
    */
   public List<String> getTransactions(String pNo, int accountId) {
-    Customer customer = findCustomer(pNo);
+    var customer = findCustomer(pNo);
     if (customer == null) {
       return null;
     }
 
-    Account account = findAccount(customer.getAccounts(), accountId);
+    var account = findAccount(customer.getAccounts(), accountId);
     if (account == null) {
       return null;
     }
@@ -301,12 +301,12 @@ public class BankLogic implements Serializable {
       return false;
     }
 
-    Customer customer = findCustomer(pNo);
+    var customer = findCustomer(pNo);
     if (customer == null) {
       return false;
     }
 
-    Account account = findAccount(customer.getAccounts(), accountId);
+    var account = findAccount(customer.getAccounts(), accountId);
     if (account == null) {
       return false;
     }
