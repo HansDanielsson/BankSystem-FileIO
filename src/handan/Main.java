@@ -392,33 +392,34 @@ public class Main extends Application {
    */
   private void getBankTransactions() {
     var strKonto = tfKontoNr[9].getSelectionModel().getSelectedItem();
-    if (strKonto != null && !strKonto.isBlank()) {
-      try {
-        var kontoNummer = Integer.parseInt(strKonto);
-        var result = bank.getTransactions(tfPNo[9].getText(), kontoNummer);
+    if (strKonto == null || strKonto.isBlank()) {
+      return;
+    }
+    try {
+      var kontoNummer = Integer.parseInt(strKonto);
+      var result = bank.getTransactions(tfPNo[9].getText(), kontoNummer);
 
-        if (result != null && !result.isEmpty()) {
-          var newResult = Stream.concat(Stream.of("Transaktioner för konto: " + strKonto), result.stream()).toList();
-
-          if (saveToFile) {
-            var strFile = BankFileIO.putFileTransactions(newResult);
-            if (strFile.startsWith("Sparad")) {
-              setStatusOk(strFile);
-            } else {
-              setStatusError(strFile);
-            }
-          } else {
-            putCenterText(newResult);
-          }
-        } else {
-          setStatusOk("Inga transaktioner för konto: " + strKonto);
-        }
-      } catch (NumberFormatException e) {
-        setStatusError("Felaktigt kontonummerformat: " + strKonto);
-      } catch (Exception e) {
-        setStatusError("Ett fel uppstod vid hämtning av transaktioner för konto: " + strKonto);
-        e.printStackTrace();
+      if (result == null || result.isEmpty()) {
+        setStatusOk("Inga transaktioner för konto: " + strKonto);
+        return;
       }
+      var newResult = Stream.concat(Stream.of("Transaktioner för konto: " + strKonto), result.stream()).toList();
+
+      if (saveToFile) {
+        var strFile = BankFileIO.putFileTransactions(newResult);
+        if (strFile.startsWith("Sparad")) {
+          setStatusOk(strFile);
+        } else {
+          setStatusError(strFile);
+        }
+      } else {
+        putCenterText(newResult);
+      }
+    } catch (NumberFormatException e) {
+      setStatusError("Felaktigt kontonummerformat: " + strKonto);
+    } catch (Exception e) {
+      setStatusError("Ett fel uppstod vid hämtning av transaktioner för konto: " + strKonto);
+      e.printStackTrace();
     }
   }
 
