@@ -58,6 +58,7 @@ public class BankFileIO {
     try {
       Thread.sleep(1000);
     } catch (InterruptedException ignored) {
+      // Ignorera avbrott
     }
     return BASE_PATH + prefix + sdf.format(new Date()) + extension;
   }
@@ -195,5 +196,9 @@ public class BankFileIO {
     alert.getDialogPane().setContent(textArea);
     alert.setResizable(true);
     alert.showAndWait();
+  }
+
+  protected BankFileIO() {
+    // Privat konstruktor för att förhindra instansiering
   }
 }
