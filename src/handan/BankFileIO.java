@@ -65,8 +65,7 @@ public class BankFileIO {
   /**
    * Hjälprutin för att välja en fil och läsa in banken.
    *
-   * @param bank Hjälp-parameter, inte på riktigt
-   * @return null eller den nya banken
+   * @return den nya banken eller null
    */
   protected static BankLogic getFileBank() {
     // Skapa en filväljare
@@ -82,8 +81,8 @@ public class BankFileIO {
       return (BankLogic) in.readObject();
     } catch (IOException | ClassNotFoundException e) {
       e.printStackTrace();
-      return null;
     }
+    return null;
   }
 
   /**
@@ -104,8 +103,8 @@ public class BankFileIO {
       return false;
     } catch (IOException e) {
       e.printStackTrace();
-      return true;
     }
+    return true;
   }
 
   /**
@@ -126,7 +125,10 @@ public class BankFileIO {
   }
 
   /**
-   * Hjälprutin som sparar bank objektet till en fil
+   * Hjälprutin som skriver bank objektet till en fil.
+   *
+   * @param bank - Bank objektet
+   * @return Filnamnet
    */
   protected static String putFileBank(BankLogic bank) {
     var path = createUniqueFileName("bank-", ".dat");
@@ -144,10 +146,12 @@ public class BankFileIO {
   }
 
   /**
+   *
    * Hjälprutin som skriver transaktioner till filen, givet att result är inte
    * null.
    *
-   * @param result - Transaktionerna
+   * @param transactions
+   * @return Filnamnet
    */
   protected static String putFileTransactions(List<String> transactions) {
     var path = createUniqueFileName("bank-", ".txt");

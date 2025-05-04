@@ -1,11 +1,14 @@
 /**
- * Klass som definierar ett bankkonto.
+ * Klass som definierar ett sparkonto.
  * Modellen ärver egenskaper från Account
  * Begränsning på ett fritt uttag/år
  * @author Hans Danielsson, handan-2
  */
 package handan;
 
+/**
+ * Importsatser
+ */
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -27,10 +30,10 @@ public class SavingsAccount extends Account {
   /**
    * Skapa ett nytt Sparkonto
    *
-   * @param initialBalance      , Startbelopp
-   * @param interestRate        , Ränta 2.4% på insatta pengar > 0
-   * @param withdrawRatePercent , Uttagsränta 2% på beloppet efter första uttaget.
-   * @param addNumber           , Om kontonummer ska ökas.
+   * @param initialBalance      Startbelopp
+   * @param interestRate        Ränta 2.4% på insatta pengar > 0
+   * @param withdrawRatePercent Uttagsränta 2% på beloppet efter första uttaget.
+   * @param addNumber           Om kontonummer ska ökas.
    */
   protected SavingsAccount(int initialBalance, double interestRate, double withdrawRatePercent, boolean addNumber) {
     super("Sparkonto", initialBalance, interestRate, addNumber);
@@ -38,7 +41,7 @@ public class SavingsAccount extends Account {
   }
 
   /**
-   * Beräknar räntan baserat på saldo och räntesats.
+   * Beräknar räntan baserat på saldo och räntesats. Avrundat till 2 decimaler.
    *
    * @return Ränta i formaterad valuta
    */

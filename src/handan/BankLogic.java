@@ -25,9 +25,9 @@ public class BankLogic implements Serializable {
   /**
    * Hjälpmetod som letar reda på ett konto
    *
-   * @param accounts         , Lista med konton
-   * @param theAccountNumber , som söks upp
-   * @return result , pekare till konto om det finns.
+   * @param accounts  Lista med konton
+   * @param accountId som söks upp
+   * @return pekare till konto om det finns.
    */
   private static Account findAccount(List<Account> accounts, int accountId) {
     return accounts.stream().filter(a -> a.getAccountNumber() == accountId).findFirst().orElse(null);
@@ -83,7 +83,7 @@ public class BankLogic implements Serializable {
    * Skapar ett kreditkonto för person pNo
    *
    * @param pNo
-   * @return -1 = Hittar inte pNo, annars kreditkontonummer
+   * @return kreditkontonummer om kunden hittas, annars -1
    */
   public int createCreditAccount(String pNo) {
     var customer = findCustomer(pNo);
@@ -189,7 +189,7 @@ public class BankLogic implements Serializable {
    * Hjälpmetod som letar reda på en kund med hjälp av pNr som är unikt. Kan inte
    * vara static
    *
-   * @param theSearchNo
+   * @param pNo
    * @return pekare till kundens post om den finns.
    */
   private Customer findCustomer(String pNo) {

@@ -4,6 +4,9 @@
  */
 package handan;
 
+/**
+ * Importsatser
+ */
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -157,13 +160,23 @@ public class Main extends Application {
   }
 
   /**
+   * Rutin som sätter färg på status texten
+   *
+   * @param str   - Meddelandet
+   * @param color - Färgen
+   */
+  private static void setStatusColor(String str, Color color) {
+    statusText.setText(str);
+    statusText.setTextFill(color);
+  }
+
+  /**
    * Rutin som visar i status texten ett felmeddelande
    *
    * @param str - Meddelandet
    */
   private static void setStatusError(String str) {
-    statusText.setText(str);
-    statusText.setTextFill(Color.RED);
+    setStatusColor(str, Color.RED);
   }
 
   /**
@@ -172,8 +185,7 @@ public class Main extends Application {
    * @param str - Meddelandet
    */
   private static void setStatusOk(String str) {
-    statusText.setText(str);
-    statusText.setTextFill(Color.GREEN);
+    setStatusColor(str, Color.GREEN);
   }
 
   // bank-hanteraren
@@ -284,7 +296,6 @@ public class Main extends Application {
     } catch (Exception e) {
       setStatusError("Felaktigt kontonummer: " + strKonto);
     }
-
   }
 
   /**

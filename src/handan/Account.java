@@ -85,9 +85,9 @@ public abstract class Account implements Serializable {
   /**
    * Konstruktor för nytt bankkonto
    *
-   * @param accountType  , Sparkonto eller Kreditkonto
-   * @param balance      , start belopp
-   * @param interestRate , 2.4% eller 1.1% på insatta pengar
+   * @param accountType  Sparkonto eller Kreditkonto
+   * @param balance      start belopp
+   * @param interestRate 2.4% eller 1.1% på insatta pengar
    * @param addNumber
    */
   protected Account(String accountType, int balance, double interestRate, boolean addNumber) {
@@ -177,16 +177,16 @@ public abstract class Account implements Serializable {
   }
 
   /**
-   * Rutin som räknar ut räntan på kontot Räntan är olika beroende på belopp och
+   * Rutin som räknar ut räntan på kontot. Räntan är olika beroende på belopp och
    * kontotyp.
    *
-   * @param rate , Räntan som gäller till beloppet
+   * @param rate Räntan som gäller till beloppet
    * @return
    */
   protected String makeAccountInfo(BigDecimal rate) {
     var percentFormat = NumberFormat.getPercentInstance(SWEDISH_LOCALE);
     percentFormat.setMaximumFractionDigits(1); // Anger att vi vill ha max 1 decimal
-    var strPercent = percentFormat.format(rate.divide(BigDecimal.valueOf(100.0), 2, RoundingMode.HALF_UP)).replace(',',
+    var strPercent = percentFormat.format(rate.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)).replace(',',
         '.');
     return String.format("%d %s %s %s", accountNumber, formatCurrency(balance), accountType, strPercent);
   }
