@@ -70,7 +70,7 @@ public class BankFileIO {
    */
   protected static BankLogic getFileBank() {
     // Skapa en filväljare
-    File file = openFile("*.dat");
+    var file = openFile("*.dat");
     if (file == null) {
       return null;
     }
